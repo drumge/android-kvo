@@ -1,0 +1,8 @@
+include ':app'
+
+
+include ':kvo-annotation'
+include ':kvo-api'
+include ':kvo-compiler'
+include ':kvo-plugin'
+include ':kvo-example'

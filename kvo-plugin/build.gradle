@@ -1,0 +1,29 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+
+
+dependencies {
+//    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    compileOnly gradleApi()//gradle sdk
+    compileOnly localGroovy()//groovy sdk
+
+    compileOnly "com.android.tools.build:gradle:3.0.1"
+    implementation 'org.javassist:javassist:3.21.0-GA'
+    compileOnly "com.android.support:support-annotations:27.1.0"
+
+    implementation "com.github.drumge:easy-plugin-api:${easy_plugin_api_version}"
+    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+if (open_publish == 'true') {
+    apply from: '../publish/gradle-mvn-push.gradle'
+
+    setPublishVersion(kvo_plugin_publish_version)
+}
+

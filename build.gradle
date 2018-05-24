@@ -1,0 +1,39 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+//        mavenLocal()
+        google()
+        jcenter()
+
+//        maven{ url uri('https://oss.sonatype.org/content/repositories/snapshots/')} // 不一定会拉取最新的SNAPSHOT版本
+//        maven{ url uri('https://oss.sonatype.org/content/groups/public')} // 不一定会拉取最新的SNAPSHOT版本
+        maven{ url uri('https://oss.sonatype.org/content/groups/staging')} // 每次会拉取最新的SNAPSHOT版本
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.2'
+        
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+        classpath "com.github.drumge:easy-plugin:${easy_plugin_version}"
+        classpath "com.github.drumge:kvo-plugin:${kvo_plugin_version}"
+    }
+}
+
+allprojects {
+    repositories {
+//        mavenLocal()
+        google()
+        jcenter()
+
+//        maven{ url uri('https://oss.sonatype.org/content/repositories/snapshots/')} // 不一定会拉取最新的SNAPSHOT版本
+//        maven{ url uri('https://oss.sonatype.org/content/groups/public')} // 不一定会拉取最新的SNAPSHOT版本
+        maven{ url uri('https://oss.sonatype.org/content/groups/staging')} // 每次会拉取最新的SNAPSHOT版本
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

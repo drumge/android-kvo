@@ -1,0 +1,55 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 26
+
+
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "com.github.drumge:kvo-api:${kvo_api_version}"
+    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
+
+    annotationProcessor "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+
+}
+
+task ket {
+    doLast {
+        println()
+        println('========  doLast  =========')
+        println()
+    }
+}
+
+//afterEvaluate {
+//    tasks.findAll {
+//        return it.name.endsWith('JavaWithJavac')
+//    }.each { javac ->
+//        javac.classpath += project.files(javac.annotationProcessorOutputFolder)
+//        println('==================' + javac.classpath)
+//        javac.classpath.each {
+//            println('------------ ' + it)
+//        }
+//    }
+//}
+

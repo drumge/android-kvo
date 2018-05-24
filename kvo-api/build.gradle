@@ -1,0 +1,44 @@
+apply plugin: 'java-library'
+//apply plugin: 'com.android.library'
+//
+//android {
+//    compileSdkVersion 27
+//
+//
+//
+//    defaultConfig {
+//        minSdkVersion 15
+//        targetSdkVersion 27
+//        versionCode 1
+//        versionName "1.0"
+//    }
+//
+//    buildTypes {
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//    }
+//}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
+
+}
+
+//sourceCompatibility = "1.7"
+//targetCompatibility = "1.7"
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+if (open_publish == 'true') {
+    apply from: '../publish/gradle-mvn-push.gradle'
+
+    setPublishVersion(kvo_api_publish_version)
+}

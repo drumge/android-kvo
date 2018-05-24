@@ -1,0 +1,19 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+//sourceCompatibility = "1.7"
+//targetCompatibility = "1.7"
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+if (open_publish == 'true') {
+    apply from: '../publish/gradle-mvn-push.gradle'
+
+    setPublishVersion(kvo_annotation_publish_version)
+}

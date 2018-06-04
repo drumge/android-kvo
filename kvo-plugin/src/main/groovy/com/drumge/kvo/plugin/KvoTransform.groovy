@@ -52,7 +52,7 @@ class KvoTransform extends BaseEasyTransform {
     boolean isNeedUnzipJar(JarInput jarInput, File outputFile) {
         String name = jarInput.name
 //        Log.i(TAG, "isNeedUnzipJar name: %s", name)
-        if (name.contains(KVO_API_ARTIFACT) | name.contains(KVO_ANNOTATION_ARTIFACT)) {
+        if (name.contains(KVO_API_ARTIFACT) || name.contains(KVO_ANNOTATION_ARTIFACT)) {
             appendClassPath(jarInput.file.absolutePath)
             return false
         }
@@ -302,11 +302,15 @@ class KvoTransform extends BaseEasyTransform {
                 if (field.hasAnnotation(KvoName.class)) {
                     KvoName kvoName = field.getAnnotation(KvoName.class)
                     String name = kvoName.name()
-                    CtMethod method = checkFieldAnnotationMethod(source, field)
-                    addBindMethod(bindMethods, field, name, method)
+                    CtMethod method = checkFieldAnnotationMethod(source, field, check)
+                    if (method != null) {
+                        addBindMethod(bindMethods, field, name, method)
+                    }
                 } else {
-                    CtMethod method = checkDefaultMethod(source, field)
-                    addBindMethod(bindMethods, field, field.name, method)
+                    CtMethod method = checkDefaultMethod(source, field, check)
+                    if (method != null) {
+                        addBindMethod(bindMethods, field, field.name, method)
+                    }
                 }
             }
         }
@@ -337,21 +341,24 @@ class KvoTransform extends BaseEasyTransform {
      * @param field
      * @return
      */
-    private CtMethod checkDefaultMethod(CtClass source, CtField field) {
+    private CtMethod checkDefaultMethod(CtClass source, CtField field, boolean check) {
         String setMethodName = "${SET_METHOD_PREFIX}${EasyUtils.upperFirstCase(field.name)}"
         for (CtMethod m : source.declaredMethods) {
             CtClass[] params = m.parameterTypes
             if (setMethodName == m.name && params.size() == 1) {
                 if (field.type in params[0]) {
                     return m
-                } else {
+                } else if (check) {
                     String msg = "${className}#${setMethodName} with ${params[0].name} can not be ${field.type.name}"
                     throw new RuntimeException(msg)
                 }
             }
         }
-        String msg = "${source.name} can not found set method bind with field #${field.name}"
-        throw new RuntimeException(msg)
+        if (check) {
+            String msg = "${source.name} can not found set method bind with field #${field.name}"
+            throw new RuntimeException(msg)
+        }
+        return null
     }
 
     /**
@@ -360,7 +367,7 @@ class KvoTransform extends BaseEasyTransform {
      * @param field
      * @return
      */
-    private CtMethod checkFieldAnnotationMethod(CtClass source, CtField field) {
+    private CtMethod checkFieldAnnotationMethod(CtClass source, CtField field, boolean check) {
         KvoName kvoName = field.getAnnotation(KvoName.class)
         for (CtMethod m : source.declaredMethods) {
             KvoBind kvoBind = m.getAnnotation(KvoBind.class)
@@ -369,15 +376,18 @@ class KvoTransform extends BaseEasyTransform {
                 if (params.size() == 1) {
                     if (field.type in params[0]) {
                         return m
-                    } else {
+                    } else if (check){
                         String msg = "${className}#${setMethodName} with ${params[0].name} can not be ${field.type.name}"
                         throw new RuntimeException(msg)
                     }
                 }
             }
         }
-        String msg = "${source.name} can not found set method bind with field #${field.name}, that had @KvoName: ${kvoName}"
-        throw new RuntimeException(msg)
+        if (check) {
+            String msg = "${source.name} can not found set method bind with field #${field.name}, that had @KvoName: ${kvoName}"
+            throw new RuntimeException(msg)
+        }
+        return null
     }
 
     /**

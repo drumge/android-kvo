@@ -3,7 +3,6 @@ package com.drumge.kvo.example;
 
 import com.drumge.kvo.annotation.KvoBind;
 import com.drumge.kvo.annotation.KvoIgnore;
-import com.drumge.kvo.annotation.KvoName;
 import com.drumge.kvo.annotation.KvoSource;
 
 /**
@@ -22,9 +21,7 @@ public class ExampleSource {
     private int mInt;
     private float mFloat;
     private double mDouble;
-    @KvoName(name = "mBoolean")
     private boolean mBoolean;
-    @KvoName(name = "sCharaaa")
     private char sChar;
 
     public void setExample(String example) {
@@ -60,12 +57,12 @@ public class ExampleSource {
     }
 
     @KvoBind(name = K_ExampleSource.mBoolean)
-    public void setmBoolean(boolean mBoolean) {
+    public void setmBooleanHH(boolean mBoolean) {
         this.mBoolean = mBoolean;
     }
 
     @KvoBind(name = K_ExampleSource.sChar)
-    public void setsChar(char sChar) {
+    public void setsCharDif(char sChar) {
         this.sChar = sChar;
     }
 }

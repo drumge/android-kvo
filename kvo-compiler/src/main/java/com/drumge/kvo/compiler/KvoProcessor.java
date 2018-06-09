@@ -4,7 +4,6 @@ import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.annotation.KvoAssist;
 import com.drumge.kvo.annotation.KvoIgnore;
-import com.drumge.kvo.annotation.KvoName;
 import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.inner.IKvoTargetCreator;
@@ -361,10 +360,6 @@ public class KvoProcessor extends AbstractProcessor {
                 if (e.getModifiers().contains(Modifier.PRIVATE)) {
                     String name = e.getSimpleName().toString();
                     fieldName = name;
-                    KvoName kvoName = e.getAnnotation(KvoName.class);
-                    if (kvoName != null && !kvoName.name().isEmpty()) {
-                        name = kvoName.name();
-                    }
                     fields.add(genField(fieldName, name));
                     mBindFields.put(format("%s.%s", className, name), fieldName);
                 }

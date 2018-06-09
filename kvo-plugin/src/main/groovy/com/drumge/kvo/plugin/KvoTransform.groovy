@@ -9,7 +9,6 @@ import com.drumge.easy.plugin.utils.TypeUtils
 import com.drumge.kvo.annotation.KvoAssist
 import com.drumge.kvo.annotation.KvoBind
 import com.drumge.kvo.annotation.KvoIgnore
-import com.drumge.kvo.annotation.KvoName
 import com.drumge.kvo.annotation.KvoSource
 import com.drumge.kvo.annotation.KvoWatch
 import com.drumge.easy.plugin.api.BaseEasyTransform
@@ -300,18 +299,9 @@ class KvoTransform extends BaseEasyTransform {
                     String msg = "${className}#${field.name} is illegal, it may need to be private, or you may add @KvoIgnore to the field, or add @KvoSource(check = false) to the class"
                     throw new RuntimeException(msg)
                 }
-                if (field.hasAnnotation(KvoName.class)) {
-                    KvoName kvoName = field.getAnnotation(KvoName.class)
-                    String name = kvoName.name()
-                    CtMethod method = checkFieldAnnotationMethod(source, field, check)
-                    if (method != null) {
-                        addBindMethod(bindMethods, field, name, method)
-                    }
-                } else {
-                    CtMethod method = checkDefaultMethod(source, field, check)
-                    if (method != null) {
-                        addBindMethod(bindMethods, field, field.name, method)
-                    }
+                CtMethod method = checkDefaultMethod(source, field, check)
+                if (method != null) {
+                    addBindMethod(bindMethods, field, field.name, method)
                 }
             }
         }
@@ -363,35 +353,6 @@ class KvoTransform extends BaseEasyTransform {
     }
 
     /**
-     * 检查带有 @KvoName(name="") 属性对应的set方法，对应的方法必须带 @KvoBind 并指定相同的name
-     * @param source
-     * @param field
-     * @return
-     */
-    private CtMethod checkFieldAnnotationMethod(CtClass source, CtField field, boolean check) {
-        KvoName kvoName = field.getAnnotation(KvoName.class)
-        for (CtMethod m : source.declaredMethods) {
-            KvoBind kvoBind = m.getAnnotation(KvoBind.class)
-            if (kvoBind != null && kvoBind.name() == kvoName.name()) {
-                CtClass[] params = m.parameterTypes
-                if (params.size() == 1) {
-                    if (field.type in params[0]) {
-                        return m
-                    } else if (check){
-                        String msg = "${className}#${setMethodName} with ${params[0].name} can not be ${field.type.name}"
-                        throw new RuntimeException(msg)
-                    }
-                }
-            }
-        }
-        if (check) {
-            String msg = "${source.name} can not found set method bind with field #${field.name}, that had @KvoName: ${kvoName}"
-            throw new RuntimeException(msg)
-        }
-        return null
-    }
-
-    /**
      * 检查方法带有 @KvoBind 注解的方法
      * @param source
      * @param field
@@ -399,12 +360,7 @@ class KvoTransform extends BaseEasyTransform {
      */
     private CtField checkBindMethod(CtClass source, CtMethod method, String name) {
         for (CtField field : source.declaredFields) {
-            if (field.hasAnnotation(KvoName.class)) {
-                KvoName kvoName = field.getAnnotation(KvoName.class)
-                if (kvoName.name() != name) {
-                    continue
-                }
-            } else if (name != field.name) {
+            if (name != field.name) {
                 continue
             }
             if (checkFieldMethod(method, field)) {

@@ -89,7 +89,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else if (v == mCharBtn) {
             String text = mCharEt.getText().toString();
             if (!TextUtils.isEmpty(text)) {
-                mTag3.setsChar(text.charAt(0));
+                mTag3.setsCharDif(text.charAt(0));
             }
         }
     }

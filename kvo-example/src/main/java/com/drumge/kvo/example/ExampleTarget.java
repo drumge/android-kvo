@@ -47,6 +47,10 @@ public class ExampleTarget {
         Kvo.getInstance().unbind(this, tag3);
     }
 
+    public void unbindAll() {
+        Kvo.getInstance().unbindAll(this);
+    }
+
     @KvoWatch(name = K_ExampleSource.example, tag = "tag1", thread = KvoWatch.Thread.MAIN)
     public void onUpdateExampleTag1(KvoEvent<ExampleSource, String> event) {
         Log.d(TAG, "onUpdateExampleTag1 oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());

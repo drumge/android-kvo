@@ -42,6 +42,7 @@ class KvoTransform extends BaseEasyTransform {
 
     private Project mProject
     private List<String> mAllHandleUnzipJar = new ArrayList<>()
+    private int mRegisterCount = 0
 
     KvoTransform(Project project) {
         super(project)
@@ -230,7 +231,7 @@ class KvoTransform extends BaseEasyTransform {
             targetCls.defrost()
         }
         targetCls.addInterface()
-        CtField register = CtField.make("private static int register = ${creatorName}#registerCreator();", targetCls)
+        CtField register = CtField.make("private static int register${mRegisterCount++} = ${creatorName}#registerCreator();", targetCls)
         targetCls.addField(register)
         targetCls.writeFile(outPath)
     }

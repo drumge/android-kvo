@@ -12,6 +12,7 @@ import com.drumge.kvo.api.thread.IKvoThread;
 import com.drumge.kvo.api.thread.KvoThread;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -167,14 +168,37 @@ public class Kvo {
         doUnbind(target, source, tag);
     }
 
+    /**
+     * 解绑 target 下的所有观察者
+     * @param target
+     *
+     */
+    public void unbindAll(@NonNull Object target) {
+        KLog.info(TAG, "unbindAll target: %s", target);
+        IKvoTargetProxy kt = createTarget(target);
+        List<KvoSourceWrap> rmList = new ArrayList<>();
+        for (Map.Entry<KvoSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> st : mSourceTarget.entrySet()) {
+            CopyOnWriteArrayList<IKvoTargetProxy> tps = st.getValue();
+            if (tps.contains(kt)) {
+                tps.remove(kt);
+            }
+            if (tps.isEmpty()) {
+                rmList.add(st.getKey());
+            }
+        }
+        for (KvoSourceWrap ksw : rmList) {
+            mSourceTarget.remove(ksw);
+        }
+    }
+
     private  <S> void doUnbind(@NonNull Object target, @Nullable S source, String tag) {
         KLog.info(TAG, "doUnbind target: %s, source: %s, tag: %s", target, source, tag);
         List<KvoSourceWrap> list = findWrap(source, tag);
         if (list == null || list.size() == 0) {
             return;
         }
+        IKvoTargetProxy kt = createTarget(target);
         for (KvoSourceWrap wrap : list) {
-            IKvoTargetProxy kt = createTarget(target);
             removeTarget(wrap, kt);
         }
     }

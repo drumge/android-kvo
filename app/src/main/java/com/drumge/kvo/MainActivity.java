@@ -14,6 +14,7 @@ import com.drumge.kvo.example.ExampleTarget;
 public class MainActivity extends Activity implements View.OnClickListener {
     private Button mBind;
     private Button mUnbind;
+    private Button mUnbindAll;
     private EditText mExampleTag1Et;
     private EditText mExampleTag2Et;
     private EditText mIndexEt;
@@ -37,8 +38,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         mBind = findViewById(R.id.bind);
         mUnbind = findViewById(R.id.unbind);
+        mUnbindAll = findViewById(R.id.unbind_all);
         mBind.setOnClickListener(this);
         mUnbind.setOnClickListener(this);
+        mUnbindAll.setOnClickListener(this);
 
         mExampleTag1Et = findViewById(R.id.example_tag1);
         mExampleTag1Btn = findViewById(R.id.example_change_tag1);
@@ -70,6 +73,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             mExampleTarget.bindKvo();
         } else if (v == mUnbind) {
             mExampleTarget.unbindKvo();
+        } else if (v == mUnbindAll) {
+            mExampleTarget.unbindAll();
         } else if (v == mExampleTag1Btn) {
             String text = mExampleTag1Et.getText().toString();
             mTag1.setExample(text);

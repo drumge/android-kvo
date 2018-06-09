@@ -21,6 +21,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="UNBIND"/>
+        <Button
+            android:id="@+id/unbind_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UNBIND_ALL"/>
     </LinearLayout>
 
     <LinearLayout

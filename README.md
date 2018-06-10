@@ -131,7 +131,7 @@ public class KvoInit {
 
 #### 3. 接口说明
 前提：使用 KVO 被观察的属性，必须通过 set 相关的方法类改变属性的值才会被 KVO 自动通知到观察者。其中改变属性的方法可以使用注解指定属性。  
-另外，KVO 的使用有一些限制，不符合的规范的会在编译期间检查报错，在编译报错时可仔细阅读相关的报错信息，然后检查使用是否规范。
+*注意：KVO 的使用有一些限制，不符合的规范的会在编译期间检查报错，在编译报错时可仔细阅读相关的报错信息，然后检查使用是否规范。*
 * **@KvoSource(check = true)**
 修饰需要被观察的属性所在的类，其中参数 check 默认值为 true， 表示会检查 @KvoSource 修饰的类中只允许存在 private 私有的属性， 否则将在编译期间报错，不能编译通过。如果需要非 private 的属性存在，可以设置 check = false, 这样子会跳过非 private 属性的检查。    
 另外` com.github.drumge:kvo-compiler ` 会为每一个 @KvoSource 修饰的类的 private 类型的属性生成一个对应的 key， 方便 @KvoBind 或者 @KvoWatch 时指定绑定的属性。生成规则，@KvoSource 类对应生成一个 K_classname 的 interface 并包含对应的 private 属性，比如 ` @KvoSource public class Example{ private String name;} ` 会生成  ` public interface K_Example { String name = "name"; } `。

@@ -12,7 +12,7 @@ Java 中内存自动回收机制，使用 KVO 不用担心 iOS 中出现循环�
 
 ### 使用
 
- KVO 使用了 gradle 插件实现预编译，依赖了本人写的另一个 [easy-gradle-plugin](https://github.com/drumge/easy-gradle-plugin.git)  gradle 插件，实现更简单的使用自定义 gradle 插件，如需有兴趣移步了解。如果只想了解 KVO 的使用，不关心实现原理可忽略 [easy-gradle-plugin](https://github.com/drumge/easy-gradle-plugin.git) 这部分。
+ KVO 使用了 gradle 插件实现预编译，依赖了另一个 [easy-gradle-plugin](https://github.com/drumge/easy-gradle-plugin.git)  gradle 插件，实现更简单的使用自定义 gradle 插件，如需有兴趣移步了解。如果只想了解 KVO 的使用，不关心实现原理可忽略 [easy-gradle-plugin](https://github.com/drumge/easy-gradle-plugin.git) 这部分。
 #### 1. build.gradle 构建脚本配置
 * 在项目根目录下的 build.gradle 中对应的块中添加以下下配置信息
 ```groovy

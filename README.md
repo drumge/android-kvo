@@ -146,16 +146,16 @@ public class KvoInit {
 **thread** 指定观察者被调用的线程，比如需要 UI 更新时可指定 ` thread = KvoWatch.Thread.MAIN `；
 **tag** 是为了解决需要观察同一个对象但是不同的实例的相同属性，这个时候就需要使用 tag 来区分不同的实例，比如一个页面中需要观察两个用户的信息中的nickname属性变化并更新 UI，用户信息对象 UserInfo，两个用户信息实例分别是 myUserInfo, otherUserInfo, 可以使用 ` @KvoWatch(name = K_UserInfo.nickname, tag = "my-info", thread = KvoWatch.Thread.MAIN) ` 来修饰更新 myUserInfo 的昵称的方法， 使用` @KvoWatch(name = K_UserInfo.nickname, tag = "other-info", thread = KvoWatch.Thread.MAIN) ` 来修饰更新 otherUserInfo 的昵称的方法。另外使用 ` Kvo#bind(Object, S, String) ` 绑定观察的实例时需要指定 tag。
 
-* **KvoEvent<S, V> **
-` @KvoWatch ` 修饰的方法的参数必须是 ` KvoEvent<S, V> ` ， 并且 S 是观察的对象类（@KvoSource）的类型， V 为属性的类型，例如
+* **KvoEvent<S, V>**
+` @KvoWatch ` 修饰的方法的参数必须是 ` KvoEvent<S, V> ` ， 其中 S 是观察的对象类（@KvoSource）的类型， V 为属性的类型，例如
  ```java
  @KvoWatch(name = K_UseInfo.name, tag = "my-info", thread = KvoWatch.Thread.MAIN)
- public void onMyInfo(KvoEvent<UseInfo, String> event) {
-    }
+ public void onMyInfo(KvoEvent<UseInfo, String> event) { }
  ```
 
-* **Kvo**
+* **Kvo**  
 最后再了解 Kvo 类中的绑定和解绑方法就可以使用 KVO了。
+*注意：Kvo 必须是使用者自己调用 bind 并 unbind, 不然可能存在内存泄漏。*
 ```java 
 /**
  * 绑定观察者

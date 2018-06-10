@@ -182,7 +182,7 @@ public <S> void bind(@NonNull Object target, @NonNull S source, String tag, bool
  public void unbindAll(@NonNull Object target)
 ```
 
-##### 4. example
+#### 4. example
 可以到 [github KVO 项目中的 example module](https://github.com/drumge/kvo.git) 上看详细 example 使用。
 被观察的属性：
 ```java 

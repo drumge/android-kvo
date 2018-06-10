@@ -27,6 +27,7 @@ public class KvoInit {
 
     private static class KvoThread implements IKvoThread {
         Handler mMainHandler = new Handler(Looper.getMainLooper());
+        // 线程池可换成项目中统一的线程池，应用中只应存在一个全局统一的线程池，不建议创建多个线程池
         private ScheduledExecutorService mThreadPool = Executors.newSingleThreadScheduledExecutor();
 
         @Override

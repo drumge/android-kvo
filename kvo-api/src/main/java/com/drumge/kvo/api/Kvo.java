@@ -121,9 +121,9 @@ public class Kvo {
 
     /**
      * 绑定观察者
-     * @param target
-     * @param source
-     * @param tag
+     * @param target @KvoWatch 修饰观察者所在实例
+     * @param source @KvoSource 修饰的被观察对象的实例
+     * @param tag 标识指定观察对象的实例
      * @param notifyWhenBind  绑定时是否通知观察者
      */
     public <S> void bind(@NonNull Object target, @NonNull S source, String tag, boolean notifyWhenBind) {
@@ -160,8 +160,8 @@ public class Kvo {
 
     /**
      * 解绑观察者
-     * @param target
-     * @param tag
+     * @param target @KvoWatch 修饰观察者所在实例
+     * @param tag 标识指定观察对象的实例
      *
      */
     public <S> void unbind(@NonNull Object target, @NonNull S source, String tag) {
@@ -170,7 +170,7 @@ public class Kvo {
 
     /**
      * 解绑 target 下的所有观察者
-     * @param target
+     * @param target @KvoWatch 修饰观察者所在实例
      *
      */
     public void unbindAll(@NonNull Object target) {

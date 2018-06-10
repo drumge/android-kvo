@@ -36,7 +36,6 @@ import com.drumge.kvo.plugin.KvoTransform
 
 apply plugin: 'com.drumge.easy.plugin'
 
-
 easy_plugin {
     enable = true
 
@@ -46,7 +45,6 @@ easy_plugin {
             transform = new KvoTransform(project)
         }
     }
-
 }
 //*/
 

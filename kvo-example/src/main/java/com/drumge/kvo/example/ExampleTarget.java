@@ -6,6 +6,8 @@ import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.annotation.KvoWatch;
 
+import java.util.List;
+
 /**
  * Created by chenrenzhan on 2018/5/3.
  */
@@ -72,5 +74,9 @@ public class ExampleTarget {
     public void onUpdateChat(KvoEvent<ExampleSource, Character> event) {
         Log.d(TAG, "onUpdateChat oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
 
+    }
+
+    @KvoWatch(name = K_CollectionExample.sourceList)
+    public void onUpdateSourceList(KvoEvent<CollectionExample, List<ExampleSource>> event) {
     }
 }

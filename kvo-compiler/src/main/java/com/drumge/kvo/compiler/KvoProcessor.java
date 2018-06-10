@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -65,6 +67,9 @@ public class KvoProcessor extends AbstractProcessor {
     private static final String NOTIFY_WATCHER_NAME = "name";
     private static final String NOTIFY_WATCHER_EVENT = "event";
     private static final String EVENT_GET_TAG = "getTag";
+
+    private static final String REG_KVO_EVENT_PARAM = ".*?KvoEvent[<](.+?),(.+?)[<>].*";
+
 
     private final Map<String, String> mBindFields = new HashMap<>();
 
@@ -141,12 +146,13 @@ public class KvoProcessor extends AbstractProcessor {
     }
 
     private String[] getTypes(VariableElement var) {
+        Pattern pattern = Pattern.compile(REG_KVO_EVENT_PARAM);
         String str = var.asType().toString();
-        String[] ts = str.split("<");
-        if (ts.length != 2) {
-            return new String[0];
+        Matcher m = pattern.matcher(str);
+        if (m.find() && m.groupCount() == 2) {
+            return new String[]{m.group(1), m.group(2)};
         }
-        return ts[1].replace("<", "").replace(">", "").split(",");
+        return new String[0];
     }
 
     private void genTargetClass(KvoTargetInfo info) {

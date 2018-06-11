@@ -42,6 +42,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic;
@@ -346,44 +347,105 @@ public class KvoProcessor extends AbstractProcessor {
      */
     private void processSource(RoundEnvironment env) {
         Set<? extends Element> elements = env.getElementsAnnotatedWith(KvoSource.class);
+        Map<String, KvoSourceInfo> allClass = new HashMap<>();
         for (Element eClass : elements) {
-            KvoSource kvoSource = eClass.getAnnotation(KvoSource.class);
-            boolean check = kvoSource.check();
-            List<? extends Element> cElements = eClass.getEnclosedElements();
-            List<FieldSpec> fields = new ArrayList<>();
-            String className = eClass.toString();
-            for (Element e : cElements) {
-                if (e.getKind() != ElementKind.FIELD) {
-                    continue;
-                }
-                if (e.getModifiers().contains(Modifier.FINAL)) {
-                    continue;
-                }
-                if (check) {
-                    checkFieldLegal(eClass, e);
-                }
-                String fieldName;
-                if (e.getModifiers().contains(Modifier.PRIVATE)) {
-                    String name = e.getSimpleName().toString();
-                    fieldName = name;
-                    fields.add(genField(fieldName, name));
-                    mBindFields.put(format("%s.%s", className, name), fieldName);
-                }
+            if (!(eClass instanceof TypeElement)) {
+                Log.i(TAG, "processSource is not TypeElement %s", eClass);
+                continue;
             }
-            if (fields.size() > 0) {
-                TypeSpec.Builder builder = TypeSpec.interfaceBuilder(SOURCE_FILED_CLASS_PREFIX + eClass.getSimpleName().toString())
-                        .addModifiers(Modifier.PUBLIC)
-                        .addJavadoc(JAVA_DOC);
-                builder.addFields(fields);
-                try {
-                    JavaFile clsJavaFile = JavaFile.builder(getPackage(className), builder.build()).build();
-                    clsJavaFile.writeTo(processingEnv.getFiler());
-                } catch (IOException e) {
-//                  e.printStackTrace();
+            TypeElement te = (TypeElement) eClass;
+            TypeElement inner = null;
+            String className = te.getQualifiedName().toString();
+            Log.i(TAG, "processSource className: %s, %s", className, te.toString());
+            if (te.getNestingKind() == NestingKind.MEMBER) { // 内部类
+                String simpleName = te.getSimpleName().toString();
+                className = className.substring(0, className.length() - simpleName.length() - 1);
+                inner = te;
+            }
+            KvoSourceInfo sourceInfo = allClass.get(className);
+            if (sourceInfo == null) {
+                sourceInfo = new KvoSourceInfo();
+                sourceInfo.className = className;
+                allClass.put(className, sourceInfo);
+            }
+            if (inner == null) {
+                sourceInfo.clsElement = te;
+            } else {
+                if (sourceInfo.innerCls == null) {
+                    sourceInfo.innerCls = new ArrayList<>();
                 }
-                genTempClass(eClass, SOURCE_CLASS_SUFFIX, null);
+                sourceInfo.innerCls.add(inner);
             }
         }
+
+        for (KvoSourceInfo info : allClass.values()) {
+            genKSource(info);
+        }
+    }
+
+    private void genKSource(KvoSourceInfo info) {
+        TypeSpec.Builder kvoSourceBuilder = null;
+        String originalSimpleName = getSimpleName(info.className);
+        String simpleName = SOURCE_FILED_CLASS_PREFIX + originalSimpleName;
+        String pack = getPackage(info.className);
+        if (info.clsElement != null) {
+            List<FieldSpec> fields = getPrivateFields(info.clsElement);
+            kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addJavadoc(JAVA_DOC)
+                    .addFields(fields);
+            genTempClass(info.clsElement, SOURCE_CLASS_SUFFIX, null);
+        }
+        if (info.innerCls != null && !info.innerCls.isEmpty()) {
+            List<TypeSpec> innerList = new ArrayList<>(info.innerCls.size());
+            for (TypeElement te : info.innerCls) {
+                List<FieldSpec> fields = getPrivateFields(te);
+                TypeSpec typeSpec = TypeSpec.interfaceBuilder(te.getSimpleName().toString())
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .addFields(fields)
+                        .addJavadoc(JAVA_DOC)
+                        .build();
+                innerList.add(typeSpec);
+                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null);
+            }
+            if (kvoSourceBuilder == null) {
+                kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
+                        .addModifiers(Modifier.PUBLIC)
+                        .addJavadoc(JAVA_DOC);
+            }
+            kvoSourceBuilder.addTypes(innerList);
+        }
+        try {
+            JavaFile clsJavaFile = JavaFile.builder(pack, kvoSourceBuilder.build()).build();
+            clsJavaFile.writeTo(processingEnv.getFiler());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private List<FieldSpec> getPrivateFields(TypeElement te) {
+        KvoSource kvoSource = te.getAnnotation(KvoSource.class);
+        boolean check = kvoSource.check();
+        List<? extends Element> cElements = te.getEnclosedElements();
+        List<FieldSpec> fields = new ArrayList<>();
+        for (Element e : cElements) {
+            if (e.getKind() != ElementKind.FIELD) {
+                continue;
+            }
+            if (e.getModifiers().contains(Modifier.FINAL)) {
+                continue;
+            }
+            if (check) {
+                checkFieldLegal(te, e);
+            }
+            String fieldName;
+            if (e.getModifiers().contains(Modifier.PRIVATE)) {
+                String name = e.getSimpleName().toString();
+                fieldName = name;
+                fields.add(genField(fieldName, name));
+            }
+        }
+        return fields;
     }
 
     private FieldSpec genField(String name, String value) {

@@ -53,7 +53,7 @@ easy_plugin {
 * 在使用 KVO 的 module 的 build.gradle 中添加
 ```groovy
 dependencies {
-    annotationProcessor "com.github.drumge:kvo-compiler:0.2.2-SNAPSHOT"
+    annotationProcessor "com.github.drumge:kvo-compiler:0.2.4-SNAPSHOT"
 }
 ```
 #### 2. KVO 初始化

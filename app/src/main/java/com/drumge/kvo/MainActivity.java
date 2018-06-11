@@ -3,15 +3,23 @@ package com.drumge.kvo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 import com.drumge.R;
+import com.drumge.kvo.annotation.KvoWatch;
+import com.drumge.kvo.api.Kvo;
+import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.example.ExampleSource;
 import com.drumge.kvo.example.ExampleTarget;
+import com.drumge.kvo.example.InnerClassExample;
+import com.drumge.kvo.example.K_InnerClassExample;
 
 public class MainActivity extends Activity implements View.OnClickListener {
+    private static final String TAG = "MainActivity";
+
     private Button mBind;
     private Button mUnbind;
     private Button mUnbindAll;
@@ -19,16 +27,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private EditText mExampleTag2Et;
     private EditText mIndexEt;
     private EditText mCharEt;
+    private EditText mNameEt;
     private Button mExampleTag1Btn;
     private Button mExampleTag2Btn;
     private Button mIndexBtn;
     private Button mCharBtn;
+    private Button mNameBtn;
 
 
     private ExampleTarget mExampleTarget;
     private ExampleSource mTag1;
     private ExampleSource mTag2;
     private ExampleSource mTag3;
+    private InnerClassExample.InnerStatic innerStatic;
 
 
     @Override
@@ -59,19 +70,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mCharBtn = findViewById(R.id.char_btn);
         mCharBtn.setOnClickListener(this);
 
+        mNameEt = findViewById(R.id.name_et);
+        mNameBtn = findViewById(R.id.name_btn);
+        mNameBtn.setOnClickListener(this);
+
         mExampleTarget = new ExampleTarget();
         mTag1 = mExampleTarget.getTag1();
         mTag2 = mExampleTarget.getTag2();
         mTag3 = mExampleTarget.getTag3();
 
-
+        innerStatic = new InnerClassExample.InnerStatic();
     }
 
     @Override
     public void onClick(View v) {
         if (v == mBind) {
+            Kvo.getInstance().bind(MainActivity.this, innerStatic);
             mExampleTarget.bindKvo();
         } else if (v == mUnbind) {
+            Kvo.getInstance().unbind(MainActivity.this, innerStatic);
             mExampleTarget.unbindKvo();
         } else if (v == mUnbindAll) {
             mExampleTarget.unbindAll();
@@ -91,6 +108,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
             if (!TextUtils.isEmpty(text)) {
                 mTag3.setsCharDif(text.charAt(0));
             }
+        }  else if (v == mNameBtn) {
+            String text = mNameEt.getText().toString();
+            if (!TextUtils.isEmpty(text)) {
+                innerStatic.updateName(text);
+            }
         }
     }
+
+    @KvoWatch(name = K_InnerClassExample.InnerStatic.name, thread = KvoWatch.Thread.WORK)
+    public void onUpdateName(KvoEvent<InnerClassExample.InnerStatic, String> event) {
+        Log.d(TAG, "onUpdateName oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
+
+    }
+
 }

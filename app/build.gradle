@@ -27,6 +27,7 @@ dependencies {
 
 //    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
     implementation "com.github.drumge:kvo-api:${kvo_api_version}"
+    annotationProcessor "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
     implementation project(':kvo-example')
 }
 

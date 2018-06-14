@@ -21,7 +21,7 @@ buildscript {
 	    maven{ url uri('https://oss.sonatype.org/content/groups/staging')}
     }
     dependencies {
-        classpath "com.github.drumge:easy-plugin:0.2.1"
+        classpath "com.github.drumge:easy-plugin:0.2.2"
         classpath "com.github.drumge:kvo-plugin:0.2.7-SNAPSHOT"
     }
 }

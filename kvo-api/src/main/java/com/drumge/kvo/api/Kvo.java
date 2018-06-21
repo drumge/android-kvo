@@ -12,7 +12,6 @@ import com.drumge.kvo.api.thread.IKvoThread;
 import com.drumge.kvo.api.thread.KvoThread;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +73,7 @@ public class Kvo {
     }
 
     private <S, V> void notifyWatcher(@NonNull KvoSourceWrap<S> wrap,  @NonNull String name, V oldValue, V newValue) {
-        KLog.info(TAG, "notifyWatcher wrap: %s, name: %s, oldValue: %s, newValue: %s", wrap, name, oldValue, newValue);
+        KLog.debug(TAG, "notifyWatcher wrap: %s, name: %s, oldValue: %s, newValue: %s", wrap, name, oldValue, newValue);
         CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
         if (targets == null || targets.size() == 0) {
             KLog.error(TAG, "notifyWatcher target is empty with KvoSourceWrap: %s, name: %s, oldValue: %s, newValue: %s", wrap, name, oldValue, newValue);
@@ -127,7 +126,7 @@ public class Kvo {
      * @param notifyWhenBind  绑定时是否通知观察者
      */
     public <S> void bind(@NonNull Object target, @NonNull S source, String tag, boolean notifyWhenBind) {
-        KLog.info(TAG, "bind target: %s, source: %s, tag: %s, notifyWhenBind: %s", target, source, tag, notifyWhenBind);
+        KLog.debug(TAG, "bind target: %s, source: %s, tag: %s, notifyWhenBind: %s", target, source, tag, notifyWhenBind);
         setKvoSourceTag(source, tag);
         KvoSourceWrap<S> wrap = createWrap(source, tag);
         CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
@@ -174,7 +173,7 @@ public class Kvo {
      *
      */
     public void unbindAll(@NonNull Object target) {
-        KLog.info(TAG, "unbindAll target: %s", target);
+        KLog.debug(TAG, "unbindAll target: %s", target);
         IKvoTargetProxy kt = createTarget(target);
         List<KvoSourceWrap> rmList = new ArrayList<>();
         for (Map.Entry<KvoSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> st : mSourceTarget.entrySet()) {
@@ -192,7 +191,7 @@ public class Kvo {
     }
 
     private  <S> void doUnbind(@NonNull Object target, @Nullable S source, String tag) {
-        KLog.info(TAG, "doUnbind target: %s, source: %s, tag: %s", target, source, tag);
+        KLog.debug(TAG, "doUnbind target: %s, source: %s, tag: %s", target, source, tag);
         List<KvoSourceWrap> list = findWrap(source, tag);
         if (list == null || list.size() == 0) {
             return;
@@ -274,6 +273,9 @@ public class Kvo {
             return false;
         }
         CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
+        if (targets == null || targets.isEmpty()) {
+            return false;
+        }
         boolean re = targets.remove(target);
         if (targets.isEmpty()) {
             mSourceTarget.remove(wrap);

@@ -22,7 +22,7 @@ buildscript {
     }
     dependencies {
         classpath "com.github.drumge:easy-plugin:0.2.2"
-        classpath "com.github.drumge:kvo-plugin:0.2.7"
+        classpath "com.github.drumge:kvo-plugin:0.2.8"
     }
 }
 allprojects {
@@ -34,7 +34,7 @@ allprojects {
  * 在 application module(as默认叫app) 下的 build.gradle 中添加以下配置信息
 ``` groovy 
 dependencies {
-	implementation "com.github.drumge:kvo-api:0.2.5"
+	implementation "com.github.drumge:kvo-api:0.2.6"
 }
 
 import com.drumge.kvo.plugin.KvoPlugin
@@ -53,7 +53,7 @@ easy_plugin {
 * 在使用 KVO 的 module 的 build.gradle 中添加
 ```groovy
 dependencies {
-    annotationProcessor "com.github.drumge:kvo-compiler:0.2.4"
+    annotationProcessor "com.github.drumge:kvo-compiler:0.2.5"
 }
 ```
 #### 2. KVO 初始化

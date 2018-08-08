@@ -52,5 +52,6 @@ easy_plugin {
 task t {
     doLast {
         println('tttttt')
+        println(android.properties)
     }
 }

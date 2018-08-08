@@ -186,6 +186,16 @@ public class KvoProcessor extends AbstractProcessor {
                         "return false;\n", p, p, targetClassName, TARGET_CLASS_FIELD, targetClassName, p, TARGET_CLASS_FIELD)
                 .build();
 
+        MethodSpec hashCode = MethodSpec.methodBuilder("hashCode")
+                .returns(TypeName.INT)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addCode("if ($L != null) {\n" +
+                        "   return $L.hashCode();\n" +
+                        "} \n" +
+                        "return super.hashCode();\n", TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                .build();
+
         MethodSpec notify = MethodSpec.methodBuilder("notifyWatcher")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
@@ -199,7 +209,8 @@ public class KvoProcessor extends AbstractProcessor {
                 .addMethods(genInitValueMethods(info))
                 .addMethod(constructor)
                 .addMethod(notify)
-                .addMethod(equals);
+                .addMethod(equals)
+                .addMethod(hashCode);
 
         TypeSpec proxy = builder.build();
         try {

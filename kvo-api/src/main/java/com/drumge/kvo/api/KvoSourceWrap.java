@@ -12,7 +12,7 @@ class KvoSourceWrap<S> {
     final S source;
     final String tag;
 
-    public KvoSourceWrap(@NonNull S source, @NonNull String tag) {
+    public KvoSourceWrap(@NonNull S source, String tag) {
         this.source = source;
         this.tag = tag == null ? "" : tag;
     }
@@ -23,6 +23,15 @@ class KvoSourceWrap<S> {
             return source == ((KvoSourceWrap) obj).source && tag.equals(((KvoSourceWrap) obj).tag);
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + source.hashCode();
+        result = prime * result + tag.hashCode();
+        return result;
     }
 
     @Override

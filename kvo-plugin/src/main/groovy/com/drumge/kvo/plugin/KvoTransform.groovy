@@ -46,6 +46,7 @@ class KvoTransform extends BaseEasyTransform {
     KvoTransform(Project project) {
         super(project)
         mProject = project
+        appendClassPath(mProject.android.bootClasspath[0].toString())
     }
 
     @Override
@@ -335,13 +336,15 @@ class KvoTransform extends BaseEasyTransform {
     private CtMethod checkDefaultMethod(CtClass source, CtField field, boolean check) {
         String setMethodName = "${SET_METHOD_PREFIX}${EasyUtils.upperFirstCase(field.name)}"
         for (CtMethod m : source.declaredMethods) {
+            if (setMethodName == m.name) {
             CtClass[] params = m.parameterTypes
-            if (setMethodName == m.name && params.size() == 1) {
-                if (field.type in params[0]) {
-                    return m
-                } else if (check) {
-                    String msg = "${className}#${setMethodName} with ${params[0].name} can not be ${field.type.name}"
-                    throw new RuntimeException(msg)
+                if (params.size() == 1) {
+                    if (field.type in params[0]) {
+                        return m
+                    } else if (check) {
+                        String msg = "${className}#${setMethodName} with ${params[0].name} can not be ${field.type.name}"
+                        throw new RuntimeException(msg)
+                    }
                 }
             }
         }

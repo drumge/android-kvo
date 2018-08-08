@@ -204,7 +204,7 @@ public class Kvo {
 
     @Nullable
     private IKvoTargetProxy createTarget(Object target) {
-        KLog.debug(TAG, "createTarget mTargetCreator: %s", mTargetCreator);
+//        KLog.debug(TAG, "createTarget mTargetCreator: %s", mTargetCreator);
         if (target == null) {
             KLog.error(TAG, "createTarget target is null");
             return null;

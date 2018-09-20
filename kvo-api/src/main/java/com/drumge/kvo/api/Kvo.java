@@ -144,7 +144,13 @@ public class Kvo {
         }
         if (notifyWhenBind) {
             // 绑定时通知观察者，初始值 oldValue = null 和 newValue 跟 source 中的值相等，预编译完成初始值赋值
-            notifyWatcher(wrap, INIT_METHOD_NAME, null, null);
+//            notifyWatcher(wrap, INIT_METHOD_NAME, null, null);
+            KvoEvent<S, Object> event = new KvoEvent<>();
+            event.tag = wrap.tag;
+            event.source = wrap.source;
+            event.oldValue = null;
+            event.newValue = null;
+            kt.notifyWatcher(INIT_METHOD_NAME, event);
         }
     }
 

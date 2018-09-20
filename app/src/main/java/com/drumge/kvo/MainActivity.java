@@ -15,10 +15,11 @@ import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.example.ExampleSource;
 import com.drumge.kvo.example.ExampleTarget;
 import com.drumge.kvo.example.InnerClassExample;
+import com.drumge.kvo.example.K_ExampleSource;
 import com.drumge.kvo.example.K_InnerClassExample;
 
 public class MainActivity extends Activity implements View.OnClickListener {
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "KvoMainActivity";
 
     private Button mBind;
     private Button mUnbind;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ExampleSource mTag1;
     private ExampleSource mTag2;
     private ExampleSource mTag3;
+    private ExampleSource mTag4;
     private InnerClassExample.InnerStatic innerStatic;
 
 
@@ -78,6 +80,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mTag1 = mExampleTarget.getTag1();
         mTag2 = mExampleTarget.getTag2();
         mTag3 = mExampleTarget.getTag3();
+        mTag4 = mExampleTarget.getTag4();
+
+        mTag3.setIndex(new Integer(3));
+
+        Kvo.getInstance().bind(this, mTag3);
 
         innerStatic = new InnerClassExample.InnerStatic();
     }
@@ -101,7 +108,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else if (v == mIndexBtn) {
             String text = mIndexEt.getText().toString();
             if (TextUtils.isDigitsOnly(text)) {
-                mTag3.setIndex(Integer.valueOf(text));
+                mTag1.setIndex(Integer.valueOf(text));
+                mTag2.setIndex(Integer.valueOf(text) + 1);
+                mTag3.setIndex(Integer.valueOf(text) + 2);
+                mTag4.setIndex(Integer.valueOf(text) + 3);
             }
         } else if (v == mCharBtn) {
             String text = mCharEt.getText().toString();
@@ -119,6 +129,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @KvoWatch(name = K_InnerClassExample.InnerStatic.name, thread = KvoWatch.Thread.WORK)
     public void onUpdateName(KvoEvent<InnerClassExample.InnerStatic, String> event) {
         Log.d(TAG, "onUpdateName oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
+
+    }
+
+    @KvoWatch(name = K_ExampleSource.index)
+    public void onUpdateIndex(KvoEvent<ExampleSource, Integer> event) {
+        Log.d(TAG, "onUpdateIndex oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
 
     }
 

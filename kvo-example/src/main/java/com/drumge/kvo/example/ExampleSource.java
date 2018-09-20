@@ -14,7 +14,7 @@ public class ExampleSource {
     @KvoIgnore
     public int aa;
     private String example;
-    private Integer index;
+    private Integer index = 0;
     private long time;
     private short mShort;
     private byte mByte;

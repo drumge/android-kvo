@@ -18,11 +18,13 @@ public class ExampleTarget {
     ExampleSource tag1;
     ExampleSource tag2;
     ExampleSource tag3;
+    ExampleSource tag4;
 
     public ExampleTarget() {
         tag1 = new ExampleSource();
         tag2 = new ExampleSource();
         tag3 = new ExampleSource();
+        tag4 = new ExampleSource();
     }
 
     public ExampleSource getTag1() {
@@ -37,10 +39,15 @@ public class ExampleTarget {
         return tag3;
     }
 
+    public ExampleSource getTag4() {
+        return tag4;
+    }
+
     public void bindKvo() {
         Kvo.getInstance().bind(this, tag1, "tag1", false);
         Kvo.getInstance().bind(this, tag2, "tag2");
         Kvo.getInstance().bind(this, tag3);
+//        Kvo.getInstance().bind(this, tag4);
     }
 
     public void unbindKvo() {

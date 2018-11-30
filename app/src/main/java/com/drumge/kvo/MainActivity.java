@@ -12,11 +12,16 @@ import com.drumge.R;
 import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.KvoEvent;
+import com.drumge.kvo.example.BaseSource;
 import com.drumge.kvo.example.ExampleSource;
 import com.drumge.kvo.example.ExampleTarget;
 import com.drumge.kvo.example.InnerClassExample;
+import com.drumge.kvo.example.K_BaseSource;
 import com.drumge.kvo.example.K_ExampleSource;
 import com.drumge.kvo.example.K_InnerClassExample;
+import com.drumge.kvo.example.SubSource;
+
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     private static final String TAG = "KvoMainActivity";
@@ -42,6 +47,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private ExampleSource mTag3;
     private ExampleSource mTag4;
     private InnerClassExample.InnerStatic innerStatic;
+
+    private SubSource subSource;
 
 
     @Override
@@ -86,6 +93,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         Kvo.getInstance().bind(this, mTag3);
 
+
+        subSource = new SubSource();
+        Kvo.getInstance().bind(this, subSource);
+
+
         innerStatic = new InnerClassExample.InnerStatic();
     }
 
@@ -123,6 +135,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             if (!TextUtils.isEmpty(text)) {
                 innerStatic.updateName(text);
             }
+
+            CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+            list.add("ddd");
+            subSource.setList(list);
         }
     }
 
@@ -134,6 +150,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @KvoWatch(name = K_ExampleSource.index)
     public void onUpdateIndex(KvoEvent<ExampleSource, Integer> event) {
+        Log.d(TAG, "onUpdateIndex oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
+
+    }
+
+    @KvoWatch(name = K_BaseSource.list)
+    public void updateList(KvoEvent<SubSource, CopyOnWriteArrayList> event) {
         Log.d(TAG, "onUpdateIndex oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
 
     }

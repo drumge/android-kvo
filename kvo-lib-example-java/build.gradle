@@ -1,0 +1,37 @@
+//apply plugin: 'java-library'
+apply plugin: 'java'
+apply plugin: "net.ltgt.apt"
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "com.github.drumge:kvo-api:${kvo_api_version}"
+    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
+
+    apt "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
+
+///*
+
+apply plugin: 'com.drumge.easy.plugin'
+
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.drumge.kvo.plugin.KvoPlugin
+
+easy_plugin {
+    enable = true
+
+    transformInputTypes(TransformManager.CONTENT_CLASS)
+    transformScopes(TransformManager.PROJECT_ONLY)
+
+    plugins{
+        kvo {
+            plugin = new KvoPlugin(project)
+        }
+    }
+}
+//*/

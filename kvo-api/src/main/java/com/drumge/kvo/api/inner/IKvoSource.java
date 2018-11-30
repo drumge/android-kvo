@@ -9,6 +9,7 @@ package com.drumge.kvo.api.inner;
  */
 
 public interface IKvoSource {
+    // TODO 同一个实例多地方绑定，会重置 tag
     void _setKvoSourceTag(String tag);
     String _getKvoSourceTag();
 }

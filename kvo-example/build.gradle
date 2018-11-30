@@ -33,6 +33,26 @@ dependencies {
 
 }
 
+///*
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.drumge.kvo.plugin.KvoPlugin
+
+apply plugin: 'com.drumge.easy.plugin'
+
+easy_plugin {
+    enable = true
+
+    transformInputTypes(TransformManager.CONTENT_CLASS)
+    transformScopes(TransformManager.PROJECT_ONLY)
+
+    plugins{
+        kvo {
+            plugin = new KvoPlugin(project)
+        }
+    }
+}
+//*/
+
 task ket {
     doLast {
         println()
@@ -40,16 +60,4 @@ task ket {
         println()
     }
 }
-
-//afterEvaluate {
-//    tasks.findAll {
-//        return it.name.endsWith('JavaWithJavac')
-//    }.each { javac ->
-//        javac.classpath += project.files(javac.annotationProcessorOutputFolder)
-//        println('==================' + javac.classpath)
-//        javac.classpath.each {
-//            println('------------ ' + it)
-//        }
-//    }
-//}
 

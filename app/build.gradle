@@ -32,18 +32,20 @@ dependencies {
 }
 
 ///*
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.drumge.kvo.plugin.KvoPlugin
-import com.drumge.kvo.plugin.KvoTransform
 
 apply plugin: 'com.drumge.easy.plugin'
 
 easy_plugin {
     enable = true
 
+    transformInputTypes(TransformManager.CONTENT_CLASS)
+    transformScopes(TransformManager.SCOPE_FULL_PROJECT)
+
     plugins{
         kvo {
             plugin = new KvoPlugin(project)
-            transform = new KvoTransform(project)
         }
     }
 }

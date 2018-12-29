@@ -19,7 +19,6 @@ class KvoPlugin implements IPlugin {
         boolean isJavaLib = project.plugins.withType(JavaPlugin)
 
         if (isApp || isAndroidLib) {
-            Map<String, Collection<String>> classPath = new HashMap<>()
             final def variants
             if (isApp) {
                 variants = project.android.applicationVariants
@@ -28,7 +27,8 @@ class KvoPlugin implements IPlugin {
             }
             variants.all { BaseVariant variant ->
                 variant.getJavaCompiler().doLast {
-                    classPath.put(variant.getName(), it.classpath.files.path)
+                    println(project.name + ' compiler java last')
+                    println(it.classpath.files.path)
                     if (kvoTransform != null) {
                         kvoTransform.addClassPath(it.classpath.files.path)
                     }

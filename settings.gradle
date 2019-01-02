@@ -7,3 +7,11 @@ include ':kvo-compiler'
 include ':kvo-plugin'
 include ':kvo-example'
 include ':kvo-lib-example-java'
+
+
+buildCache {
+    local(DirectoryBuildCache) {
+        directory = new File(rootDir, 'build-cache')
+//        removeUnusedEntriesAfterDays = 30
+    }
+}

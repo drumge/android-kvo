@@ -25,7 +25,8 @@ class KvoTransform extends BaseEasyTransform {
     }
 
     void addClassPath(Collection<String> classPath) {
-        Log.i(TAG, mProject.name + " addClassPath classPath: %s", classPath)
+        Log.i(TAG, mProject.name + " addClassPath classPath")
+//        Log.i(TAG, mProject.name + " addClassPath classPath: %s", classPath)
         hasJavaCompiler = true
         mHandler.appendDirClass(classPath)
     }
@@ -39,8 +40,8 @@ class KvoTransform extends BaseEasyTransform {
 
     @Override
     boolean isNeedUnzipJar(JarInput jarInput, File outputFile) {
-        String name = jarInput.name
-        Log.i(TAG, mProject.name + " isNeedUnzipJar name: %s, status: %s", name, jarInput.status)
+//        String name = jarInput.name
+//        Log.i(TAG, mProject.name + " isNeedUnzipJar name: %s, status: %s", name, jarInput.status)
         return false
     }
 
@@ -61,7 +62,7 @@ class KvoTransform extends BaseEasyTransform {
     @Override
     void onEachDirectoryOutput(DirectoryInput directoryInput, File outputs) {
         super.onEachDirectoryOutput(directoryInput, outputs)
-        Log.i(TAG, mProject.name + " onEachDirectoryOutput directoryInput: %s, outputs: %s", directoryInput, outputs.absolutePath)
+//        Log.i(TAG, mProject.name + " onEachDirectoryOutput directoryInput: %s, outputs: %s", directoryInput, outputs.absolutePath)
         if (hasJavaCompiler) {
             String outPath = outputs.absolutePath + File.separator
             mHandler.handle(outPath)

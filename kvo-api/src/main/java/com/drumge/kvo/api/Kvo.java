@@ -3,7 +3,9 @@ package com.drumge.kvo.api;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.api.inner.IKvoSource;
+import com.drumge.kvo.api.inner.IKvoTarget;
 import com.drumge.kvo.api.inner.IKvoTargetProxy;
 import com.drumge.kvo.api.inner.IKvoTargetCreator;
 import com.drumge.kvo.api.log.IKvoLog;
@@ -14,6 +16,7 @@ import com.drumge.kvo.api.thread.KvoThread;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -62,10 +65,9 @@ public class Kvo {
      */
     public <S, V> void notifyWatcher(@NonNull S source, @NonNull String name, V oldValue, V newValue) {
         if(!KvoUtils.deepEquals(oldValue, newValue)) {
-            String tag = getKvoSourceTag(source);
             for (KvoSourceWrap w : mSourceTarget.keySet()) {
                 // 通知 source 实例的默认tag以及指定 tag 的观察者
-                if (source == w.source && (w.tag.length() == 0 || w.tag.equals(tag))) {
+                if (source == w.source && (w.tag.length() == 0 || containKvoSourceTag(source, w.tag))) {
                     notifyWatcher(w, name, oldValue, newValue);
                 }
             }
@@ -126,8 +128,10 @@ public class Kvo {
      * @param notifyWhenBind  绑定时是否通知观察者
      */
     public <S> void bind(@NonNull Object target, @NonNull S source, String tag, boolean notifyWhenBind) {
-        KLog.debug(TAG, "bind target: %s, source: %s, tag: %s, notifyWhenBind: %s", target, source, tag, notifyWhenBind);
-        setKvoSourceTag(source, tag);
+        KLog.debug(TAG, "bind tag: %s, notifyWhenBind: %b, target: %s, source: %s", tag, notifyWhenBind, target, source);
+        checkTargetIllegal(target);
+        checkSourceIllegal(source);
+
         KvoSourceWrap<S> wrap = createWrap(source, tag);
         CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
         IKvoTargetProxy kt = createTarget(target);
@@ -141,6 +145,7 @@ public class Kvo {
         }
         if (!targets.contains(kt)) {
             targets.add(kt);
+            addKvoSourceTag(source, tag);
         }
         if (notifyWhenBind) {
             // 绑定时通知观察者，初始值 oldValue = null 和 newValue 跟 source 中的值相等，预编译完成初始值赋值
@@ -180,6 +185,8 @@ public class Kvo {
      */
     public void unbindAll(@NonNull Object target) {
         KLog.debug(TAG, "unbindAll target: %s", target);
+        checkTargetIllegal(target);
+
         IKvoTargetProxy kt = createTarget(target);
         List<KvoSourceWrap> rmList = new ArrayList<>();
         for (Map.Entry<KvoSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> st : mSourceTarget.entrySet()) {
@@ -193,11 +200,15 @@ public class Kvo {
         }
         for (KvoSourceWrap ksw : rmList) {
             mSourceTarget.remove(ksw);
+            removeKvoSourceTag(ksw.source, ksw.tag);
         }
     }
 
     private  <S> void doUnbind(@NonNull Object target, @Nullable S source, String tag) {
-        KLog.debug(TAG, "doUnbind target: %s, source: %s, tag: %s", target, source, tag);
+        KLog.debug(TAG, "doUnbind tag: %s, target: %s, source: %s", tag, target, source);
+        checkTargetIllegal(target);
+        checkSourceIllegal(source);
+
         List<KvoSourceWrap> list = findWrap(source, tag);
         if (list == null || list.size() == 0) {
             return;
@@ -206,6 +217,7 @@ public class Kvo {
         for (KvoSourceWrap wrap : list) {
             removeTarget(wrap, kt);
         }
+//        removeKvoSourceTag(source, tag);
     }
 
     @Nullable
@@ -239,6 +251,18 @@ public class Kvo {
 
     public void workThread(@NonNull Runnable task, long delay) {
         KvoThread.getInstance().workThread(task, delay);
+    }
+
+    private <S> void checkSourceIllegal(S source) {
+        if (source != null && !(source instanceof IKvoSource)) {
+            throw new IllegalArgumentException(String.format("source(%s) must be Object with @KvoSource annotation", source.getClass()));
+        }
+    }
+
+    private <T> void checkTargetIllegal(T target) {
+        if (target != null && !(target instanceof IKvoTarget)) {
+            throw new IllegalArgumentException(String.format("target(%s) must be Object with @KvoWatch annotation to annotate method", target.getClass()));
+        }
     }
 
     private <S> KvoSourceWrap<S> createWrap(S source, String tag) {
@@ -285,43 +309,59 @@ public class Kvo {
         boolean re = targets.remove(target);
         if (targets.isEmpty()) {
             mSourceTarget.remove(wrap);
+            removeKvoSourceTag(wrap.source, wrap.tag);
         }
         return re;
     }
 
-
-    private <S> void setKvoSourceTag(S source, String tag) {
+    private <S> void addKvoSourceTag(S source, String tag) {
         if (tag == null || tag.length() == 0) {
             return;
         }
-        _setKvoSourceTag(source, tag);
+        _addKvoSourceTag(source, tag);
     }
 
-    private <S> String getKvoSourceTag(S source) {
-        String tag = "";
-        if (source == null) {
-            return tag;
+    private <S> void removeKvoSourceTag(S source, String tag) {
+        if (tag == null || tag.length() == 0) {
+            return;
         }
-        tag = _getKvoSourceTag(source);
-        return tag == null ? "" : tag;
+        _removeKvoSourceTag(source, tag);
     }
 
-    private void _setKvoSourceTag(Object source, String tag) {
+    private <S> boolean containKvoSourceTag(S source, String tag) {
+        if (tag == null || tag.length() == 0) {
+            return false;
+        }
+        return _containKvoSourceTag(source, tag);
+    }
+
+    private boolean _addKvoSourceTag(Object source, String tag) {
         try {
             IKvoSource s = (IKvoSource) source;
-            s._setKvoSourceTag(tag);
+            return s._addKvoSourceTag(tag);
         } catch (Exception e) {
             KLog.error(TAG, e);
         }
+        return false;
     }
 
-    private String _getKvoSourceTag(Object source) {
-        try{
+    private boolean _removeKvoSourceTag(Object source, String tag) {
+        try {
             IKvoSource s = (IKvoSource) source;
-            return s._getKvoSourceTag();
+            return s._removeKvoSourceTag(tag);
         } catch (Exception e) {
             KLog.error(TAG, e);
         }
-        return "";
+        return false;
+    }
+
+    private boolean _containKvoSourceTag(Object source, String tag) {
+        try {
+            IKvoSource s = (IKvoSource) source;
+            return s._containKvoSourceTag(tag);
+        } catch (Exception e) {
+            KLog.error(TAG, e);
+        }
+        return false;
     }
 }

@@ -10,10 +10,6 @@ import org.gradle.api.Project
 class KvoHandler {
     private static final String TAG = "KvoHandler"
 
-    private static final String KVO_API_ARTIFACT = 'com.github.drumge:kvo-api'
-    private static final String KVO_ANNOTATION_ARTIFACT = 'com.github.drumge:kvo-annotation'
-    private static final String HAGO_ARTIFACT = 'com.yy.hago:'
-
     private static final String SOURCE_CLASS_SUFFIX = '$$KvoSource.class'
     private static final String WATCH_CLASS_SUFFIX = '$$KvoTargetProxy.class'
     private static final String CREATOR_CLASS_SUFFIX = '$$KvoTargetCreator'
@@ -22,11 +18,13 @@ class KvoHandler {
     private static final String INIT_VALUE_METHOD_PREFIX = "initValue_"
     private static final String KVO_CLASS = "com.drumge.kvo.api.Kvo"
     private static final String I_SOURCE_CLASS = "com.drumge.kvo.api.inner.IKvoSource"
+    private static final String I_TARGET_CLASS = "com.drumge.kvo.api.inner.IKvoTarget"
     private static final String KVO_EVENT_CLASS = "com.drumge.kvo.api.KvoEvent"
     private static final String KVO = "${KVO_CLASS}.getInstance()"
-    private static final String KVO_SOURCE_TAG_FIELD = "_kvoSourceTag"
-    private static final String KVO_SOURCE_TAG_SET_METHOD = "_setKvoSourceTag"
-    private static final String KVO_SOURCE_TAG_GET_METHOD = "_getKvoSourceTag"
+    private static final String KVO_SOURCE_TAG_FIELD = "_kvoSourceTagList"
+    private static final String KVO_SOURCE_TAG_ADD_METHOD = "_addKvoSourceTag"
+    private static final String KVO_SOURCE_TAG_REMOVE_METHOD = "_removeKvoSourceTag"
+    private static final String KVO_SOURCE_TAG_CONTAIN_METHOD = "_containKvoSourceTag"
     private static final String KVO_SOURCE_GET_METHOD_PREFIX = "_get_"
 
     private Project mProject
@@ -96,8 +94,6 @@ class KvoHandler {
         classPaths.clear()
     }
 
-
-
     /**
      * 处理注入代码入口，先处理 source
      * @param outPath
@@ -135,6 +131,7 @@ class KvoHandler {
             String proxyName = path.replace(outPath, '').replaceAll(EasyUtils.regSeparator(), '.')
             String targetName = proxyName.replace(WATCH_CLASS_SUFFIX, '')
             String proxy = proxyName.replace('.class', '')
+            addTargetInterface(targetName, outPath)
             processWatch(proxy, targetName, outPath)
             injectRegister(targetName, outPath)
         }
@@ -180,6 +177,21 @@ class KvoHandler {
     }
 
     /**
+     * 添加观察者所在对象实现 IKvoTarget 限定接口，做类型检查作用
+     * @param targetName
+     * @param outPath
+     */
+    private void addTargetInterface(String targetName, String outPath) {
+        CtClass target = pool.get(targetName)
+        CtClass iTarget = pool.get(I_TARGET_CLASS)
+        if (target.isFrozen()) {
+            target.defrost()
+        }
+        target.addInterface(iTarget)
+        target.writeFile(outPath)
+    }
+
+    /**
      * 处理观察者所在的对象，生成 $$KvoTargetProxy 辅助类
      * @param proxyName
      * @param className
@@ -215,7 +227,7 @@ class KvoHandler {
         if (targetCls.isFrozen()) {
             targetCls.defrost()
         }
-        targetCls.addInterface()
+//        targetCls.addInterface()
         CtField register = CtField.make("private static int register${mRegisterCount++} = ${creatorName}#registerCreator();", targetCls)
         targetCls.addField(register)
         targetCls.writeFile(outPath)
@@ -243,17 +255,35 @@ class KvoHandler {
     private void genKvoSourceTag(CtClass source) {
         CtClass iSource = pool.get(I_SOURCE_CLASS)
         source.addInterface(iSource)
-        CtField field = CtField.make("private String ${KVO_SOURCE_TAG_FIELD} = \"\";", source)
+        pool.importPackage("java.util.List")
+        pool.importPackage("java.util.concurrent.CopyOnWriteArrayList")
+
+        CtField field = CtField.make("private final List ${KVO_SOURCE_TAG_FIELD} = new CopyOnWriteArrayList();", source)
         source.addField(field)
-        CtMethod set = CtMethod.make("final public void ${KVO_SOURCE_TAG_SET_METHOD}(String tag) {\n" +
-                "   tag = tag == null ? \"\" : tag;" +
-                "   \$0.${KVO_SOURCE_TAG_FIELD} = \$1;\n" +
+
+        CtMethod add = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_ADD_METHOD}(String tag) {\n" +
+                "if (\$1 == null || \$1.length() == 0) {\n" +
+                "            return false;\n" +
+                "        }\n" +
+                "return \$0.${KVO_SOURCE_TAG_FIELD}.add(\$1);\n" +
                 "}", source)
-        source.addMethod(set)
-        CtMethod get = CtMethod.make("final public String ${KVO_SOURCE_TAG_GET_METHOD}() {\n" +
-                "   return \$0.${KVO_SOURCE_TAG_FIELD};\n" +
+        source.addMethod(add)
+
+        CtMethod remove = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_REMOVE_METHOD}(String tag) {\n" +
+                "if (\$1 == null || \$1.length() == 0) {\n" +
+                "            return false;\n" +
+                "        }\n" +
+                "return \$0.${KVO_SOURCE_TAG_FIELD}.remove(\$1);\n" +
                 "}", source)
-        source.addMethod(get)
+        source.addMethod(remove)
+
+        CtMethod contain = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_CONTAIN_METHOD}(String tag) {\n" +
+                "if (\$1 == null || \$1.length() == 0) {\n" +
+                "            return false;\n" +
+                "        }\n" +
+                "return \$0.${KVO_SOURCE_TAG_FIELD}.contains(\$1);\n" +
+                "}", source)
+        source.addMethod(contain)
     }
 
     /**

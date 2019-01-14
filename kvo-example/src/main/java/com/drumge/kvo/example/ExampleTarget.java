@@ -46,6 +46,7 @@ public class ExampleTarget {
     public void bindKvo() {
         Kvo.getInstance().bind(this, tag1, "tag1", false);
         Kvo.getInstance().bind(this, tag2, "tag2");
+        Kvo.getInstance().bind(this, tag2, "tag22");
         Kvo.getInstance().bind(this, tag3);
 //        Kvo.getInstance().bind(this, tag4);
     }

@@ -12,7 +12,6 @@ import com.drumge.R;
 import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.KvoEvent;
-import com.drumge.kvo.example.BaseSource;
 import com.drumge.kvo.example.ExampleSource;
 import com.drumge.kvo.example.ExampleTarget;
 import com.drumge.kvo.example.InnerClassExample;
@@ -156,7 +155,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @KvoWatch(name = K_BaseSource.list)
     public void updateList(KvoEvent<SubSource, CopyOnWriteArrayList> event) {
-        Log.d(TAG, "onUpdateIndex oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
+        Log.d(TAG, "updateList oldValue: " + event.getOldValue() + ", newValue: " + event.getNewValue());
 
     }
 

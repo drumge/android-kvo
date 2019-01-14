@@ -21,8 +21,8 @@ buildscript {
 	    maven{ url uri('https://oss.sonatype.org/content/groups/staging')}
     }
     dependencies {
-        classpath "com.github.drumge:easy-plugin:0.2.2"
-        classpath "com.github.drumge:kvo-plugin:0.2.8"
+        classpath "com.github.drumge:easy-plugin:0.2.3"
+        classpath "com.github.drumge:kvo-plugin:0.2.15"
     }
 }
 allprojects {
@@ -34,7 +34,7 @@ allprojects {
  * 在 application module(as默认叫app) 下的 build.gradle 中添加以下配置信息
 ``` groovy 
 dependencies {
-	implementation "com.github.drumge:kvo-api:0.2.6"
+	implementation "com.github.drumge:kvo-api:0.2.8"
 }
 
 import com.drumge.kvo.plugin.KvoPlugin

@@ -1,5 +1,7 @@
 package com.drumge.kvo.api.inner;
 
+import android.support.annotation.RestrictTo;
+
 import com.drumge.kvo.api.KvoEvent;
 
 /**
@@ -10,6 +12,7 @@ import com.drumge.kvo.api.KvoEvent;
  * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface IKvoTargetProxy<T> {
     void notifyWatcher(final String name, KvoEvent event);
 }

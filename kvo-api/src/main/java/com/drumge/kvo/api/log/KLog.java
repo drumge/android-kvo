@@ -1,11 +1,14 @@
 package com.drumge.kvo.api.log;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * Created by chenrenzhan on 2018/5/1.
  *
- * {@hide}
+ * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class KLog {
     private static IKvoLog kLog;
 

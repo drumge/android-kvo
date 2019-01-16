@@ -1,6 +1,7 @@
 package com.drumge.kvo.api;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 /**
  * Created by chenrenzhan on 2018/5/2.
@@ -8,6 +9,7 @@ import android.support.annotation.NonNull;
  * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class KvoSourceWrap<S> {
     final S source;
     final String tag;

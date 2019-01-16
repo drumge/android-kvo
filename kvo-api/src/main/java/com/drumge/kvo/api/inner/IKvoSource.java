@@ -1,5 +1,7 @@
 package com.drumge.kvo.api.inner;
 
+import android.support.annotation.RestrictTo;
+
 /**
  * Created by chenrenzhan on 2018/5/3.
  *
@@ -8,6 +10,7 @@ package com.drumge.kvo.api.inner;
  * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface IKvoSource {
     boolean _addKvoSourceTag(String tag);
     boolean _removeKvoSourceTag(String tag);

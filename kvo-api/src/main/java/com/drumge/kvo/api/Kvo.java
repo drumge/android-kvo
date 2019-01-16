@@ -2,21 +2,22 @@ package com.drumge.kvo.api;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
-import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.api.inner.IKvoSource;
 import com.drumge.kvo.api.inner.IKvoTarget;
-import com.drumge.kvo.api.inner.IKvoTargetProxy;
 import com.drumge.kvo.api.inner.IKvoTargetCreator;
+import com.drumge.kvo.api.inner.IKvoTargetProxy;
 import com.drumge.kvo.api.log.IKvoLog;
 import com.drumge.kvo.api.log.KLog;
+import com.drumge.kvo.api.runtime.IKvoRuntime;
+import com.drumge.kvo.api.runtime.KvoRuntimeSimple;
 import com.drumge.kvo.api.thread.IKvoThread;
 import com.drumge.kvo.api.thread.KvoThread;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -31,10 +32,13 @@ public class Kvo {
     private final Map<KvoSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> mSourceTarget = new ConcurrentHashMap<>();
     private final Map<Class<?>, IKvoTargetCreator> mTargetCreator = new ConcurrentHashMap<>();
 
+    private IKvoRuntime mKvoRuntime;
+
 
     private static class InstanceHolder {
         static Kvo instance = new Kvo();
     }
+
     public static Kvo getInstance() {
         return Kvo.InstanceHolder.instance;
     }
@@ -50,6 +54,18 @@ public class Kvo {
         KvoThread.getInstance().init(thread);
     }
 
+    public void setRumtime(IKvoRuntime runtime) {
+        mKvoRuntime = runtime == null ? new KvoRuntimeSimple() : runtime;
+    }
+
+    /**
+     * 代码注入使用，业务不要直接使用
+     * @param cls
+     * @param creator
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void registerTarget(Class<?> cls, IKvoTargetCreator creator) {
         if (cls != null && creator != null) {
             mTargetCreator.put(cls, creator);
@@ -57,12 +73,16 @@ public class Kvo {
     }
 
     /**
+     * 代码注入使用，业务不要直接使用
      * 通知观察者
      * @param source 被观察实体类实例
      * @param name 被观察属性名字 field.name
      * @param oldValue 被观察属性更新前的值
      * @param newValue 被观察属性更新后的值
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public <S, V> void notifyWatcher(@NonNull S source, @NonNull String name, V oldValue, V newValue) {
         if(!KvoUtils.deepEquals(oldValue, newValue)) {
             for (KvoSourceWrap w : mSourceTarget.keySet()) {
@@ -237,31 +257,73 @@ public class Kvo {
         return null;
     }
 
+    /**
+     * 代码注入使用，业务不要直接使用
+     * @param task
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void mainThread(@NonNull Runnable task) {
         KvoThread.getInstance().mainThread(task);
     }
 
+    /**
+     * 代码注入使用，业务不要直接使用
+     * @param task
+     * @param delay
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void mainThread(@NonNull Runnable task, long delay) {
         KvoThread.getInstance().mainThread(task, delay);
     }
 
+    /**
+     * 代码注入使用，业务不要直接使用
+     * @param task
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void workThread(@NonNull Runnable task) {
         KvoThread.getInstance().workThread(task);
     }
 
+    /**
+     * 代码注入使用，业务不要直接使用
+     * @param task
+     * @param delay
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void workThread(@NonNull Runnable task, long delay) {
         KvoThread.getInstance().workThread(task, delay);
     }
 
     private <S> void checkSourceIllegal(S source) {
         if (source != null && !(source instanceof IKvoSource)) {
-            throw new IllegalArgumentException(String.format("source(%s) must be Object with @KvoSource annotation", source.getClass()));
+            String msg = String.format("source(%s) must be Object with @KvoSource annotation", source.getClass());
+            IllegalArgumentException e = new IllegalArgumentException(msg);
+            if (mKvoRuntime.isRelease()) {
+                KLog.error(TAG, e);
+            } else {
+                throw e;
+            }
         }
     }
 
     private <T> void checkTargetIllegal(T target) {
         if (target != null && !(target instanceof IKvoTarget)) {
-            throw new IllegalArgumentException(String.format("target(%s) must be Object with @KvoWatch annotation to annotate method", target.getClass()));
+            String msg = String.format("target(%s) must be Object with @KvoWatch annotation to annotate method", target.getClass());
+            IllegalArgumentException e = new IllegalArgumentException(msg);
+            if (mKvoRuntime.isRelease()) {
+                KLog.error(TAG, e);
+            } else {
+                throw e;
+            }
         }
     }
 

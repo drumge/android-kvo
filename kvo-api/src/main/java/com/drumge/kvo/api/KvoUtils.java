@@ -1,12 +1,17 @@
 package com.drumge.kvo.api;
 
+import android.support.annotation.RestrictTo;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Created by chenrenzhan on 2018/5/1.
+ *
+ * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class KvoUtils {
     /**
      * Returns {@code true} if the arguments are deeply equal to each other

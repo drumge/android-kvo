@@ -34,7 +34,7 @@ allprojects {
  * 在 application module(as默认叫app) 下的 build.gradle 中添加以下配置信息
 ``` groovy 
 dependencies {
-	implementation "com.github.drumge:kvo-api:0.2.8"
+	implementation "com.github.drumge:kvo-api:0.2.9"
 }
 
 import com.drumge.kvo.plugin.KvoPlugin

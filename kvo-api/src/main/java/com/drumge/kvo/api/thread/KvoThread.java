@@ -3,6 +3,7 @@ package com.drumge.kvo.api.thread;
 
 
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import com.drumge.kvo.api.log.KLog;
 
@@ -13,6 +14,7 @@ import com.drumge.kvo.api.log.KLog;
  * @hide
  */
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class KvoThread {
     private static final String TAG = "KvoThread";
     private static final KvoThread ourInstance = new KvoThread();

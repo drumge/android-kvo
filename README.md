@@ -22,7 +22,7 @@ buildscript {
     }
     dependencies {
         classpath "com.github.drumge:easy-plugin:0.2.3"
-        classpath "com.github.drumge:kvo-plugin:0.2.15"
+        classpath "com.github.drumge:kvo-plugin:0.2.17"
     }
 }
 allprojects {

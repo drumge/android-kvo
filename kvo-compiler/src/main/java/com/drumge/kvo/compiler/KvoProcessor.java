@@ -1,13 +1,13 @@
 package com.drumge.kvo.compiler;
 
-import com.drumge.kvo.api.Kvo;
-import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.annotation.KvoAssist;
 import com.drumge.kvo.annotation.KvoIgnore;
 import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.annotation.KvoWatch;
-import com.drumge.kvo.api.inner.IKvoTargetCreator;
-import com.drumge.kvo.api.inner.IKvoTargetProxy;
+import com.drumge.kvo.api.KvoEvent;
+import com.drumge.kvo.inner.IKvoTargetCreator;
+import com.drumge.kvo.inner.IKvoTargetProxy;
+import com.drumge.kvo.inner.thread.KvoThread;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -56,7 +56,7 @@ import javax.tools.Diagnostic;
 public class KvoProcessor extends AbstractProcessor {
     private static final String TAG = "KvoProcessor";
     private static final String JAVA_DOC = "Automatically generated file. DO NOT MODIFY.\n";
-    private static final String KVO_INSTANCE = "com.drumge.kvo.api.Kvo.getInstance()";
+    private static final String KVO_PROXY_CREATOR_INSTANCE = "com.drumge.kvo.inner.KvoTargetProxyCreator.getInstance()";
     private static final String KVO_EVENT_NAME = KvoEvent.class.getName();
     private static final String SOURCE_FILED_CLASS_PREFIX = "K_";
     private static final String GET_NAME_METHOD_PREFIX = "kw_";
@@ -68,6 +68,7 @@ public class KvoProcessor extends AbstractProcessor {
     private static final String NOTIFY_WATCHER_NAME = "name";
     private static final String NOTIFY_WATCHER_EVENT = "event";
     private static final String EVENT_GET_TAG = "getTag";
+    private static final String EQUALS_TARGET_METHOD = "equalsTarget";
 
     private static final String REG_KVO_EVENT_PARAM = ".*?KvoEvent[<](.+?),(.+?)[<>].*";
 
@@ -210,6 +211,7 @@ public class KvoProcessor extends AbstractProcessor {
                 .addMethod(constructor)
                 .addMethod(notify)
                 .addMethod(equals)
+                .addMethod(genEqualsTargetMethod(targetType))
                 .addMethod(hashCode);
 
         TypeSpec proxy = builder.build();
@@ -221,6 +223,18 @@ public class KvoProcessor extends AbstractProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private MethodSpec genEqualsTargetMethod(TypeName targetType) {
+        MethodSpec method = MethodSpec.methodBuilder(EQUALS_TARGET_METHOD)
+                .returns(boolean.class)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addParameter(TypeName.get(Object.class), TARGET_CLASS_FIELD, Modifier.FINAL)
+                .addCode("if ($L instanceof $T) { return this.$L == $L;} return false;",
+                        TARGET_CLASS_FIELD, targetType, TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                .build();
+        return method;
     }
 
     private void genCreatorClass(KvoTargetInfo info) {
@@ -246,7 +260,7 @@ public class KvoProcessor extends AbstractProcessor {
         MethodSpec newCreator = MethodSpec.methodBuilder("registerCreator")
                 .returns(int.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addCode("$L.registerTarget($L.class, new $T());\n", KVO_INSTANCE, info.target.toString(), creatorType)
+                .addCode("$L.registerTarget($L.class, new $T());\n", KVO_PROXY_CREATOR_INSTANCE, info.target.toString(), creatorType)
                 .addCode("return 0;\n", creatorType)
                 .build();
 
@@ -278,6 +292,7 @@ public class KvoProcessor extends AbstractProcessor {
         }
         return ms;
     }
+
     private Set<MethodSpec> genInitValueMethods(KvoTargetInfo info) {
         Set<ExecutableElement> methods = info.methods;
         Set<MethodSpec> ms = new HashSet<>(methods.size());
@@ -311,7 +326,7 @@ public class KvoProcessor extends AbstractProcessor {
             KvoWatch w = e.getAnnotation(KvoWatch.class);
             KvoWatch.Thread thread = w.thread();
             ClassName kvoWatchName = ClassName.get(KvoWatch.class);
-            ClassName kvoName = ClassName.get(Kvo.class);
+            ClassName kvoThreadName = ClassName.get(KvoThread.class);
             String methodName = e.getSimpleName().toString();
             List<? extends VariableElement> ps = e.getParameters();
             VariableElement param = ps.get(0);
@@ -343,10 +358,10 @@ public class KvoProcessor extends AbstractProcessor {
                     "       $L.$L(events[0]);\n" +
                     "   }\n" +
                     "}\n", NOTIFY_WATCHER_EVENT, types[0], NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types[1],
-                    Kvo.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(), NOTIFY_WATCHER_EVENT,
-                    EVENT_GET_TAG, Kvo.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName, NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
-                    thread, kvoWatchName, kvoName, TARGET_CLASS_FIELD, methodName, thread,
-                    kvoWatchName, kvoName, TARGET_CLASS_FIELD, methodName, TARGET_CLASS_FIELD, methodName);
+                    IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(), NOTIFY_WATCHER_EVENT,
+                    EVENT_GET_TAG, IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName, NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
+                    thread, kvoWatchName, kvoThreadName, TARGET_CLASS_FIELD, methodName, thread,
+                    kvoWatchName, kvoThreadName, TARGET_CLASS_FIELD, methodName, TARGET_CLASS_FIELD, methodName);
         }
         return block.build();
     }

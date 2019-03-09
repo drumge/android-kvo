@@ -1,4 +1,4 @@
-package com.drumge.kvo.api;
+package com.drumge.kvo.inner;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
@@ -10,13 +10,21 @@ import android.support.annotation.RestrictTo;
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-class KvoSourceWrap<S> {
+public class KvoSourceWrap<S> {
     final S source;
     final String tag;
 
     public KvoSourceWrap(@NonNull S source, String tag) {
         this.source = source;
         this.tag = tag == null ? "" : tag;
+    }
+
+    public S getSource() {
+        return source;
+    }
+
+    public String getTag() {
+        return tag;
     }
 
     @Override

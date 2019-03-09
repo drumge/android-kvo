@@ -1,4 +1,4 @@
-package com.drumge.kvo.api.inner;
+package com.drumge.kvo.inner;
 
 import android.support.annotation.RestrictTo;
 

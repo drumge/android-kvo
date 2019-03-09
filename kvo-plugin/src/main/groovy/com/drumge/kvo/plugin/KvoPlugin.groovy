@@ -49,6 +49,7 @@ class KvoPlugin implements IPlugin {
         project.afterEvaluate {
             if (project.plugins.withType(AppPlugin)) {
                 project.android.applicationVariants.all {
+
                     String name = captureName(it.name)
                     variantNames.add("compile${name}JavaWithJavac")
                 }

@@ -1,6 +1,8 @@
-package com.drumge.kvo.api.log;
+package com.drumge.kvo.inner.log;
 
 import android.support.annotation.RestrictTo;
+
+import com.drumge.kvo.api.log.IKvoLog;
 
 /**
  * Created by chenrenzhan on 2018/5/1.

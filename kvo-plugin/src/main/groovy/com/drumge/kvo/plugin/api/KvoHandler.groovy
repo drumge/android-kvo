@@ -16,11 +16,10 @@ class KvoHandler {
     private static final String SET_METHOD_PREFIX = "set"
     private static final String GET_NAME_METHOD_PREFIX = "kw_"
     private static final String INIT_VALUE_METHOD_PREFIX = "initValue_"
-    private static final String KVO_CLASS = "com.drumge.kvo.api.Kvo"
-    private static final String I_SOURCE_CLASS = "com.drumge.kvo.api.inner.IKvoSource"
-    private static final String I_TARGET_CLASS = "com.drumge.kvo.api.inner.IKvoTarget"
+    private static final String I_SOURCE_CLASS = "com.drumge.kvo.inner.IKvoSource"
+    private static final String I_TARGET_CLASS = "com.drumge.kvo.inner.IKvoTarget"
     private static final String KVO_EVENT_CLASS = "com.drumge.kvo.api.KvoEvent"
-    private static final String KVO = "${KVO_CLASS}.getInstance()"
+    private static final String KVO_IMP = "com.drumge.kvo.inner.KvoImp.getInstance()"
     private static final String KVO_SOURCE_TAG_FIELD = "_kvoSourceTagList"
     private static final String KVO_SOURCE_TAG_ADD_METHOD = "_addKvoSourceTag"
     private static final String KVO_SOURCE_TAG_REMOVE_METHOD = "_removeKvoSourceTag"
@@ -166,7 +165,7 @@ class KvoHandler {
                 sb.append("${typeName} ${nv} = \$1;\n")
             }
             sb.append("\$0.${fieldName} = \$1;")
-            sb.append("${KVO}.notifyWatcher(\$0, \"${info.bindName}\", ${ov}, ${nv});\n")
+            sb.append("${KVO_IMP}.notifyWatcher(\$0, \"${info.bindName}\", ${ov}, ${nv});\n")
 
             info.bindMethod.insertBefore(sb.toString())
             genFieldGetMethod(source, info)

@@ -319,6 +319,7 @@ public class ExampleTarget {
 * 绑定指定属性，解绑指定属性
 * @KvoWatch 绑定时通知的顺序
 * 继承关系，支持子类接收父类的@KvoWatch通知
+* 拦截器
 
 
 

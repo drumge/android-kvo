@@ -1,11 +1,12 @@
-package com.drumge.kvo.api.thread;
+package com.drumge.kvo.inner.thread;
 
 
 
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
 
-import com.drumge.kvo.api.log.KLog;
+import com.drumge.kvo.inner.log.KLog;
+import com.drumge.kvo.api.thread.IKvoThread;
 
 
 /**

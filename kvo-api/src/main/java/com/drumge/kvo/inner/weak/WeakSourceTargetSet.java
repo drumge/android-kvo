@@ -63,6 +63,7 @@ public class WeakSourceTargetSet {
             WeakSourceWrap w = entry.getKey();
             CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets = entry.getValue();
             // 通知 source 实例的默认tag以及指定 tag 的观察者
+            // todo source == w.getSource() ?
             if (source == w.getSource() && (w.getTag().length() == 0 || KvoUtils.containKvoSourceTag(source, w.getTag()))
                     && targets != null && !targets.isEmpty()) {
                 List<IKvoTargetProxy> list = getTargetList(targets);

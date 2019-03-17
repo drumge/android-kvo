@@ -16,6 +16,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    productFlavors {
+        googlePlay {
+            versionCode 1
+            dimension "versionCode"
+        }
+
+        officialExtra {
+            versionCode 1
+            dimension "versionCode"
+        }
+    }
+    flavorDimensions 'versionCode'
 }
 
 dependencies {

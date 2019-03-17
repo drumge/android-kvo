@@ -15,27 +15,29 @@ class KvoTransform extends BaseEasyTransform {
     private Project mProject
     private KvoHandler mHandler
     private boolean hasJavaCompiler = false
+    private Collection<String> mClassPath = new ArrayList<>()
 
 
     KvoTransform(Project project) {
         super(project)
         mProject = project
-        mHandler = new KvoHandler(project, pool)
-        mHandler.appendClassPath(mProject.android.bootClasspath[0].toString())
+//        mHandler = new KvoHandler(project, pool)
+//        mHandler.appendClassPath(mProject.android.bootClasspath[0].toString())
     }
 
     void addClassPath(Collection<String> classPath) {
-        Log.i(TAG, mProject.name + " addClassPath classPath")
 //        Log.i(TAG, mProject.name + " addClassPath classPath: %s", classPath)
         hasJavaCompiler = true
-        mHandler.appendDirClass(classPath)
+        mClassPath.addAll(classPath)
     }
 
     @Override
     void onBeforeTransform(Context context, TransformOutputProvider outputProvider, boolean isIncremental) {
         super.onBeforeTransform(context, outputProvider, isIncremental)
-//        if (context instanceof TransformTask) {
-//        }
+        Log.i(TAG, mProject.name + " onBeforeTransform ")
+        mHandler = new KvoHandler(mProject)
+        mHandler.appendClassPath(mProject.android.bootClasspath[0].toString())
+        mHandler.appendDirClass(mClassPath)
     }
 
     @Override
@@ -78,5 +80,7 @@ class KvoTransform extends BaseEasyTransform {
     void onFinally() {
         super.onFinally()
         mHandler.finish()
+        mClassPath.clear()
+        Log.i(TAG, project.name + " onFinally ")
     }
 }

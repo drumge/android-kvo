@@ -4,15 +4,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RestrictTo;
 
-import com.drumge.kvo.api.Kvo;
-import com.drumge.kvo.inner.IKvoSource;
 import com.drumge.kvo.inner.IKvoTargetProxy;
 import com.drumge.kvo.inner.KvoUtils;
 import com.drumge.kvo.inner.thread.KvoThread;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,26 +27,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class WeakSourceTargetSet {
     private static final String TAG = "WeakSourceTargetSet";
 
-    private final Map<WeakSourceWrap, CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>>> mSourceTarget = new ConcurrentHashMap<>();
-    private final Map<Reference, String> mTargetTag = new ConcurrentHashMap<>();
+    private final Map<WeakSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> mSourceTarget = new ConcurrentHashMap<>();
 
     private final ReferenceQueue<Object> mSourceQueue = new ReferenceQueue<>();
-    private final ReferenceQueue<IKvoTargetProxy> mTargetQueue = new ReferenceQueue<>();
     private final static Object LOCK = new Object();
     private volatile boolean isExpunging = false;
 
     public <S> void add(@NonNull IKvoTargetProxy kt, @NonNull S source, String tag) {
         WeakSourceWrap<S> wrap = createWrap(source, tag);
-        CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets = mSourceTarget.get(wrap);
+        CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
         if (targets == null) {
             targets = new CopyOnWriteArrayList<>();
             mSourceTarget.put(wrap, targets);
         }
         if (findTarget(targets, kt) == null) {
-            WeakReference<IKvoTargetProxy> weak = new WeakReference<>(kt, mTargetQueue);
-            targets.add(weak);
+            targets.add(kt);
             if (tag != null && tag.length() != 0) {
-                mTargetTag.put(weak, tag);
                 KvoUtils.addKvoSourceTag(source, tag);
             }
         }
@@ -59,21 +52,24 @@ public class WeakSourceTargetSet {
     @SuppressWarnings("unchecked")
     public <S> Map<WeakSourceWrap, List<IKvoTargetProxy>> findWatcher(@NonNull S source) {
         Map<WeakSourceWrap, List<IKvoTargetProxy>> entrySet = null;
-        for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>>> entry : mSourceTarget.entrySet()) {
+        List<WeakSourceWrap> rmSource = new ArrayList<>();
+        for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> entry : mSourceTarget.entrySet()) {
             WeakSourceWrap w = entry.getKey();
-            CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets = entry.getValue();
+            CopyOnWriteArrayList<IKvoTargetProxy> targets = entry.getValue();
             // 通知 source 实例的默认tag以及指定 tag 的观察者
-            // todo source == w.getSource() ?
             if (source == w.getSource() && (w.getTag().length() == 0 || KvoUtils.containKvoSourceTag(source, w.getTag()))
                     && targets != null && !targets.isEmpty()) {
-                List<IKvoTargetProxy> list = getTargetList(targets);
-                if (list != null && !list.isEmpty()) {
+                List<IKvoTargetProxy> list = checkInvalidTarget(targets);
+                if (!list.isEmpty()) {
                     if (entrySet == null) {
                         entrySet = new HashMap<>();
                     }
                     entrySet.put(w, list);
+                } else {
+                    rmSource.add(w);
                 }
             }
+            removeSourceWrap(rmSource);
         }
 
         expungeStale();
@@ -81,12 +77,22 @@ public class WeakSourceTargetSet {
         return entrySet;
     }
 
+    private List<IKvoTargetProxy> checkInvalidTarget(List<IKvoTargetProxy> targets) {
+        List<IKvoTargetProxy> list = new CopyOnWriteArrayList<>(targets);
+        for (IKvoTargetProxy proxy : targets) {
+            if (!proxy.isTargetValid()) {
+                list.remove(proxy);
+            }
+        }
+        return list;
+    }
+
     public void removeAll(Object target) {
         List<WeakSourceWrap> rmSource = null;
-        for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>>> entry : mSourceTarget.entrySet()) {
+        for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> entry : mSourceTarget.entrySet()) {
             WeakSourceWrap sourceWrap = entry.getKey();
-            CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets = entry.getValue();
-            if (removeTarget(target, sourceWrap, targets)) {
+            CopyOnWriteArrayList<IKvoTargetProxy> targets = entry.getValue();
+            if (removeTarget(target, targets)) {
                 if (rmSource == null) {
                     rmSource = new ArrayList<>();
                 }
@@ -106,8 +112,8 @@ public class WeakSourceTargetSet {
         }
         List<WeakSourceWrap> rmSource = null;
         for (WeakSourceWrap wrap : list) {
-            CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets = mSourceTarget.get(wrap);
-            if (removeTarget(target, wrap, targets)) {
+            CopyOnWriteArrayList<IKvoTargetProxy> targets = mSourceTarget.get(wrap);
+            if (removeTarget(target, targets)) {
                 if (rmSource == null) {
                     rmSource = new ArrayList<>();
                 }
@@ -121,27 +127,22 @@ public class WeakSourceTargetSet {
     }
 
     @SuppressWarnings("unchecked")
-    private boolean removeTarget(Object target, WeakSourceWrap sourceWrap, CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets) {
+    private boolean removeTarget(Object target, CopyOnWriteArrayList<IKvoTargetProxy> targets) {
         if (targets != null && !targets.isEmpty()) {
-            List<WeakReference<IKvoTargetProxy>> rm = null;
-            for (WeakReference<IKvoTargetProxy> weak : targets) {
-                IKvoTargetProxy proxy = weak.get();
+            List<IKvoTargetProxy> rm = null;
+            for (IKvoTargetProxy proxy : targets) {
                 if (proxy != null) {
                     if (proxy.equalsTarget(target)) {
                         if (rm == null) {
                             rm = new ArrayList<>();
                         }
-                        rm.add(weak);
+                        rm.add(proxy);
                     }
                 }
             }
             if (rm != null && !rm.isEmpty()) {
-                for (WeakReference<IKvoTargetProxy> weak : rm) {
-                    targets.remove(weak);
-                    String tag = mTargetTag.get(weak);
-                    if (sourceWrap.getSource() != null && tag != null) {
-                        KvoUtils.removeKvoSourceTag(sourceWrap.getSource(), tag);
-                    }
+                for (IKvoTargetProxy proxy : rm) {
+                    targets.remove(proxy);
                 }
                 if (targets.isEmpty()) {
                     return true;
@@ -154,12 +155,16 @@ public class WeakSourceTargetSet {
     private void removeSourceWrap(List<WeakSourceWrap> rmSource) {
         if (rmSource != null && !rmSource.isEmpty()) {
             for (WeakSourceWrap sourceWrap : rmSource) {
-                mSourceTarget.remove(sourceWrap);
-                String tag = sourceWrap.tag;
-                if (tag != null && tag.length() > 0 && sourceWrap.getSource() != null) {
-                    KvoUtils.removeKvoSourceTag(sourceWrap.getSource(), tag);
-                }
+                removeSourceWrap(sourceWrap);
             }
+        }
+    }
+
+    private void removeSourceWrap(WeakSourceWrap sourceWrap) {
+        mSourceTarget.remove(sourceWrap);
+        String tag = sourceWrap.tag;
+        if (tag != null && tag.length() > 0 && sourceWrap.getSource() != null) {
+            KvoUtils.removeKvoSourceTag(sourceWrap.getSource(), tag);
         }
     }
 
@@ -196,29 +201,15 @@ public class WeakSourceTargetSet {
     }
 
     @Nullable
-    private List<IKvoTargetProxy> getTargetList(List<WeakReference<IKvoTargetProxy>> reList) {
-        List<IKvoTargetProxy> list = null;
-        for (WeakReference<IKvoTargetProxy> re : reList) {
-            if (re != null && re.get() != null) {
-                if (list == null) {
-                    list = new CopyOnWriteArrayList<>();
-                }
-                list.add(re.get());
-            }
-        }
-        return list;
-    }
-
-    @Nullable
-    private WeakReference<IKvoTargetProxy> findTarget(CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>> targets, IKvoTargetProxy kt) {
+    private IKvoTargetProxy findTarget(CopyOnWriteArrayList<IKvoTargetProxy> targets, IKvoTargetProxy kt) {
         if (targets == null || targets.isEmpty() || kt == null) {
             return null;
         }
 
-        WeakReference<IKvoTargetProxy> result = null;
+        IKvoTargetProxy result = null;
 
-        for (WeakReference<IKvoTargetProxy> wkt : targets) {
-            if (kt.equals(wkt.get())) {
+        for (IKvoTargetProxy wkt : targets) {
+            if (kt.equals(wkt)) {
                 result = wkt;
                 break;
             }
@@ -249,58 +240,25 @@ public class WeakSourceTargetSet {
     private void expungeStaleAsync() {
         isExpunging = true;
         List<Reference> sourceStale = getStale(mSourceQueue);
-        List<Reference> targetStale = getStale(mTargetQueue);
-
-        removeStale(sourceStale, targetStale);
+        removeStale(sourceStale);
 
         isExpunging = false;
     }
 
-    private void removeStale(List<Reference> sourceStale, List<Reference> targetStale) {
-        if (sourceStale != null && targetStale != null) {
+    private void removeStale(List<Reference> sourceStale) {
+        if (sourceStale != null) {
             synchronized (LOCK) {
                 List<WeakSourceWrap> rmSource = new ArrayList<>();
-                for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<WeakReference<IKvoTargetProxy>>> entry : mSourceTarget.entrySet()) {
+                for (Map.Entry<WeakSourceWrap, CopyOnWriteArrayList<IKvoTargetProxy>> entry : mSourceTarget.entrySet()) {
                     WeakSourceWrap sourceWrap = entry.getKey();
                     if (sourceWrap == null) {
                         continue;
                     }
-                    IKvoSource source = null;
-                    if ((source = (IKvoSource) sourceWrap.weakSource.get()) == null || sourceStale.contains(sourceWrap.weakSource)) {
+                    if (sourceWrap.weakSource.get() == null || sourceStale.contains(sourceWrap.weakSource)) {
                         rmSource.add(sourceWrap);
-                    } else {
-                        if (!targetStale.isEmpty()) {
-                            List<WeakReference<IKvoTargetProxy>> targetList = entry.getValue();
-                            if (targetList != null) {
-                                for (Reference ref : targetStale) {
-                                    if (targetList.isEmpty()) {
-                                        break;
-                                    }
-                                    targetList.remove(ref);
-
-                                    String tag = null;
-                                    if ((tag = mTargetTag.remove(ref)) != null && tag.length() > 0) {
-                                        KvoUtils.removeKvoSourceTag(source, tag);
-                                    }
-                                }
-                                if (targetList.isEmpty()) {
-                                    rmSource.add(sourceWrap);
-                                }
-                            }
-                        }
                     }
                 }
-
-                if (!rmSource.isEmpty()) {
-                    for (WeakSourceWrap sourceWrap : rmSource) {
-                        mSourceTarget.remove(sourceWrap);
-
-                        String tag = sourceWrap.tag;
-                        if (tag != null && tag.length() > 0 && sourceWrap.getSource() != null) {
-                            KvoUtils.removeKvoSourceTag(sourceWrap.getSource(), tag);
-                        }
-                    }
-                }
+                removeSourceWrap(rmSource);
             }
         }
     }

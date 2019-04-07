@@ -69,6 +69,7 @@ public class KvoProcessor extends AbstractProcessor {
     private static final String NOTIFY_WATCHER_EVENT = "event";
     private static final String EVENT_GET_TAG = "getTag";
     private static final String EQUALS_TARGET_METHOD = "equalsTarget";
+    private static final String IS_TARGET_VALID_METHOD = "isTargetValid";
 
     private static final String REG_KVO_EVENT_PARAM = ".*?KvoEvent[<](.+?),(.+?)[<>].*";
 
@@ -212,6 +213,7 @@ public class KvoProcessor extends AbstractProcessor {
                 .addMethod(notify)
                 .addMethod(equals)
                 .addMethod(genEqualsTargetMethod(targetType))
+                .addMethod(genIsTargetValidMethod())
                 .addMethod(hashCode);
 
         TypeSpec proxy = builder.build();
@@ -233,6 +235,17 @@ public class KvoProcessor extends AbstractProcessor {
                 .addParameter(TypeName.get(Object.class), TARGET_CLASS_FIELD, Modifier.FINAL)
                 .addCode("if ($L instanceof $T) { return this.$L == $L;} return false;",
                         TARGET_CLASS_FIELD, targetType, TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                .build();
+        return method;
+    }
+
+    private MethodSpec genIsTargetValidMethod() {
+        MethodSpec method = MethodSpec.methodBuilder(IS_TARGET_VALID_METHOD)
+                .returns(boolean.class)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addCode("return this.$L.get() != null;\n",
+                        TARGET_CLASS_FIELD)
                 .build();
         return method;
     }

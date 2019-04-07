@@ -18,4 +18,5 @@ public interface IKvoTargetProxy<T> {
 
     void notifyWatcher(final String name, KvoEvent event);
     boolean equalsTarget(Object obj);
+    boolean isTargetValid();
 }

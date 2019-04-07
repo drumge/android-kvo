@@ -23,6 +23,7 @@ class KvoHandler {
     private static final String KVO_SOURCE_TAG_FIELD = "_kvoSourceTagList"
     private static final String KVO_SOURCE_TAG_ADD_METHOD = "_addKvoSourceTag"
     private static final String KVO_SOURCE_TAG_REMOVE_METHOD = "_removeKvoSourceTag"
+    private static final String KVO_SOURCE_TAG_REMOVE_ALL_METHOD = "_removeKvoSourceAllTag"
     private static final String KVO_SOURCE_TAG_CONTAIN_METHOD = "_containKvoSourceTag"
     private static final String KVO_SOURCE_GET_METHOD_PREFIX = "_get_"
 
@@ -254,10 +255,10 @@ class KvoHandler {
     private void genKvoSourceTag(CtClass source) {
         CtClass iSource = pool.get(I_SOURCE_CLASS)
         source.addInterface(iSource)
-        pool.importPackage("java.util.List")
-        pool.importPackage("java.util.concurrent.CopyOnWriteArrayList")
+        pool.importPackage("java.util.Set")
+        pool.importPackage("java.util.concurrent.CopyOnWriteArraySet")
 
-        CtField field = CtField.make("private final List ${KVO_SOURCE_TAG_FIELD} = new CopyOnWriteArrayList();", source)
+        CtField field = CtField.make("private final Set ${KVO_SOURCE_TAG_FIELD} = new CopyOnWriteArraySet();", source)
         source.addField(field)
 
         CtMethod add = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_ADD_METHOD}(String tag) {\n" +
@@ -275,6 +276,20 @@ class KvoHandler {
                 "return \$0.${KVO_SOURCE_TAG_FIELD}.remove(\$1);\n" +
                 "}", source)
         source.addMethod(remove)
+
+//        CtMethod removeAll = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_REMOVE_ALL_METHOD}(String tag) {\n" +
+//                "if (\$1 == null || \$1.length() == 0) {\n" +
+//                "            return false;\n" +
+//                "        }\n" +
+//                "        List rm = new ArrayList();\n" +
+//                "        for (int i = 0; i < \$0.${KVO_SOURCE_TAG_FIELD}.size(); ++i) {\n" +
+//                "                if (tag.equals(\$0.${KVO_SOURCE_TAG_FIELD}.get(i))) {\n" +
+//                "                    rm.add(\$0.${KVO_SOURCE_TAG_FIELD}.get(i));\n" +
+//                "                }\n" +
+//                "            }\n" +
+//                "        return \$0.${KVO_SOURCE_TAG_FIELD}.removeAll(rm);\n" +
+//                "}", source)
+//        source.addMethod(removeAll)
 
         CtMethod contain = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_CONTAIN_METHOD}(String tag) {\n" +
                 "if (\$1 == null || \$1.length() == 0) {\n" +

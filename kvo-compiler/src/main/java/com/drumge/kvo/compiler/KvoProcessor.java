@@ -7,6 +7,7 @@ import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.inner.IKvoTargetCreator;
 import com.drumge.kvo.inner.IKvoTargetProxy;
+import com.drumge.kvo.inner.log.KLog;
 import com.drumge.kvo.inner.thread.KvoThread;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.AnnotationSpec;
@@ -20,6 +21,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +66,7 @@ public class KvoProcessor extends AbstractProcessor {
     private static final String SOURCE_CLASS_SUFFIX = "$$KvoSource";
     private static final String PROXY_CLASS_SUFFIX = "$$KvoTargetProxy";
     private static final String CREATOR_CLASS_SUFFIX = "$$KvoTargetCreator";
-    private static final String TARGET_CLASS_FIELD = "target";
+    private static final String TARGET_CLASS_FIELD = "weakTarget";
     private static final String NOTIFY_WATCHER_NAME = "name";
     private static final String NOTIFY_WATCHER_EVENT = "event";
     private static final String EVENT_GET_TAG = "getTag";
@@ -161,17 +163,20 @@ public class KvoProcessor extends AbstractProcessor {
     private void genTargetClass(KvoTargetInfo info) {
 //        Log.i(TAG, "genTargetClass info.simpleName: %s, info.target: %s", info.simpleName, info.target);
         TypeName targetType = TypeName.get(info.target.asType());
+//        TypeName weakTargetType = TypeName.get(WeakReference.class);
+        ParameterizedTypeName weakTargetType = ParameterizedTypeName.get(ClassName.get(WeakReference.class), targetType);
         String targetClassName = info.simpleName + PROXY_CLASS_SUFFIX;
         TypeSpec.Builder builder= TypeSpec.classBuilder(targetClassName)
                 .addJavadoc(JAVA_DOC)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetProxy.class), targetType));
 
-        FieldSpec fTarget = FieldSpec.builder(targetType, TARGET_CLASS_FIELD, Modifier.FINAL, Modifier.PRIVATE).build();
+        FieldSpec fTarget = FieldSpec.builder(weakTargetType, TARGET_CLASS_FIELD, Modifier.FINAL, Modifier.PRIVATE).build();
 
+        String target = "target";
         MethodSpec constructor = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(targetType, TARGET_CLASS_FIELD, Modifier.FINAL)
-                .addCode("this.$L = $L;\n", TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                .addParameter(targetType, target, Modifier.FINAL)
+                .addCode("this.$L = new $T($L);\n", TARGET_CLASS_FIELD, weakTargetType, target)
                 .build();
 
         String p = "obj";
@@ -183,7 +188,7 @@ public class KvoProcessor extends AbstractProcessor {
                 .addCode("if (this == $L) {\n" +
                         "   return true;\n" +
                         "} else if ($L instanceof $L) {\n" +
-                        "   return this.$L == (($L) $L).$L;\n" +
+                        "   return this.$L.get() == (($L) $L).$L.get();\n" +
                         "}\n" +
                         "return false;\n", p, p, targetClassName, TARGET_CLASS_FIELD, targetClassName, p, TARGET_CLASS_FIELD)
                 .build();
@@ -192,8 +197,8 @@ public class KvoProcessor extends AbstractProcessor {
                 .returns(TypeName.INT)
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .addCode("if ($L != null) {\n" +
-                        "   return $L.hashCode();\n" +
+                .addCode("if ($L.get() != null) {\n" +
+                        "   return $L.get().hashCode();\n" +
                         "} \n" +
                         "return super.hashCode();\n", TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
                 .build();
@@ -233,7 +238,7 @@ public class KvoProcessor extends AbstractProcessor {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addParameter(TypeName.get(Object.class), TARGET_CLASS_FIELD, Modifier.FINAL)
-                .addCode("if ($L instanceof $T) { return this.$L == $L;} return false;",
+                .addCode("if ($L instanceof $T) { return this.$L.get() == $L;} return false;",
                         TARGET_CLASS_FIELD, targetType, TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
                 .build();
         return method;
@@ -331,8 +336,16 @@ public class KvoProcessor extends AbstractProcessor {
     }
 
     private CodeBlock genNotifyWatchBlock(KvoTargetInfo info) {
+        String target = "target";
+        TypeName targetType = TypeName.get(info.target.asType());
+        TypeName kLog = TypeName.get(KLog.class);
         Set<ExecutableElement> methods = info.methods;
         CodeBlock.Builder block = CodeBlock.builder();
+        block.add("final $L $L = $L.get();\n" +
+                "      if ($L == null) {\n" +
+                "          $T.error($S, \"notifyWatcher target object is null, name: %s\", name);\n" +
+                "          return;\n" +
+                "      }\n", targetType, target, TARGET_CLASS_FIELD, target, kLog, info.target.getSimpleName());
         for (ExecutableElement e : methods) {
             String getName = GET_NAME_METHOD_PREFIX + e.getSimpleName().toString() + "()";
             String initName = INIT_VALUE_METHOD_PREFIX + e.getSimpleName().toString();
@@ -373,8 +386,8 @@ public class KvoProcessor extends AbstractProcessor {
                     "}\n", NOTIFY_WATCHER_EVENT, types[0], NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types[1],
                     IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(), NOTIFY_WATCHER_EVENT,
                     EVENT_GET_TAG, IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName, NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
-                    thread, kvoWatchName, kvoThreadName, TARGET_CLASS_FIELD, methodName, thread,
-                    kvoWatchName, kvoThreadName, TARGET_CLASS_FIELD, methodName, TARGET_CLASS_FIELD, methodName);
+                    thread, kvoWatchName, kvoThreadName, target, methodName, thread,
+                    kvoWatchName, kvoThreadName, target, methodName, target, methodName);
         }
         return block.build();
     }

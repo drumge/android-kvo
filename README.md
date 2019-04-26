@@ -320,6 +320,7 @@ public class ExampleTarget {
 * @KvoWatch 绑定时通知的顺序
 * 继承关系，支持子类接收父类的@KvoWatch通知
 * 拦截器
+* 泛型，见 AItemViewHolder
 
 
 

@@ -19,10 +19,13 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -30,8 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -46,11 +47,16 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
 /**
  * Created by chenrenzhan on 2018/4/29.
+ *
+ * java poet 参考资料： https://xsfelvis.github.io/2018/06/06/%E8%B0%88%E8%B0%88APT%E5%92%8CJavaPoet%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7/
+ * https://blog.csdn.net/l540675759/article/details/82931785
  */
 
 @AutoService(Processor.class)
@@ -75,8 +81,6 @@ public class KvoProcessor extends AbstractProcessor {
 
     private static final String REG_KVO_EVENT_PARAM = ".*?KvoEvent[<](.+?),(.+?)[<>].*";
 
-
-    private final Map<String, String> mBindFields = new HashMap<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -119,7 +123,7 @@ public class KvoProcessor extends AbstractProcessor {
             List<? extends VariableElement> ps = em.getParameters();
             VariableElement param;
             if (ps.size() != 1 || !(param = ps.get(0)).asType().toString().startsWith(KVO_EVENT_NAME)
-                    || getTypes(param).length != 2) {
+                    || getTypes(param).size() != 2) {
                 Log.e(TAG, "%s#%s is illegal, the parameters must be size: %s, @KvoWatch can have only one parameter KvoEvent<S, V>, and must have assign the type of <S, V>", em.getEnclosingElement(), em, em.getParameters().size());
             }
             Element ce = em.getEnclosingElement();
@@ -150,14 +154,16 @@ public class KvoProcessor extends AbstractProcessor {
         return null;
     }
 
-    private String[] getTypes(VariableElement var) {
-        Pattern pattern = Pattern.compile(REG_KVO_EVENT_PARAM);
-        String str = var.asType().toString();
-        Matcher m = pattern.matcher(str);
-        if (m.find() && m.groupCount() == 2) {
-            return new String[]{m.group(1), m.group(2)};
+    private List<String> getTypes(VariableElement var) {
+        List<? extends TypeMirror> typeList = getTypeArguments(var.asType());
+        if (typeList != null && !typeList.isEmpty()) {
+            List<String> types = new ArrayList<>(typeList.size());
+            for (TypeMirror type : typeList) {
+                types.add(typeNameWithoutTypeArguments(type.toString()));
+            }
+            return types;
         }
-        return new String[0];
+        return Collections.EMPTY_LIST;
     }
 
     private void genTargetClass(KvoTargetInfo info) {
@@ -169,6 +175,13 @@ public class KvoProcessor extends AbstractProcessor {
         TypeSpec.Builder builder= TypeSpec.classBuilder(targetClassName)
                 .addJavadoc(JAVA_DOC)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetProxy.class), targetType));
+
+        if (info.target instanceof TypeElement) {
+            TypeElement te = (TypeElement) info.target;
+            for (TypeParameterElement tpe : te.getTypeParameters()) {
+                builder.addTypeVariable(TypeVariableName.get(tpe));
+            }
+        }
 
         FieldSpec fTarget = FieldSpec.builder(weakTargetType, TARGET_CLASS_FIELD, Modifier.FINAL, Modifier.PRIVATE).build();
 
@@ -238,8 +251,8 @@ public class KvoProcessor extends AbstractProcessor {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addParameter(TypeName.get(Object.class), TARGET_CLASS_FIELD, Modifier.FINAL)
-                .addCode("if ($L instanceof $T) { return this.$L.get() == $L;} return false;",
-                        TARGET_CLASS_FIELD, targetType, TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                .addCode("if ($L instanceof $L) { return this.$L.get() == $L;} return false;",
+                        TARGET_CLASS_FIELD, typeNameWithoutTypeArguments(targetType), TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
                 .build();
         return method;
     }
@@ -265,6 +278,13 @@ public class KvoProcessor extends AbstractProcessor {
         TypeSpec.Builder builder= TypeSpec.classBuilder(creatorClassName)
                 .addJavadoc(JAVA_DOC)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetCreator.class), proxyType, targetType));
+
+        if (info.target instanceof TypeElement) {
+            TypeElement te = (TypeElement) info.target;
+            for (TypeParameterElement tpe : te.getTypeParameters()) {
+                builder.addTypeVariable(TypeVariableName.get(tpe));
+            }
+        }
 
         MethodSpec creatorMethod = MethodSpec.methodBuilder("createTarget")
                 .addParameter(targetType, "target")
@@ -318,9 +338,9 @@ public class KvoProcessor extends AbstractProcessor {
             String name =  e.getSimpleName().toString();
             List<? extends VariableElement> ps = e.getParameters();
             VariableElement param = ps.get(0);
-            String[] types = getTypes(param);
+            List<String> types = getTypes(param);
             AnnotationSpec annotation = AnnotationSpec.builder(KvoAssist.class)
-                    .addMember("name", "$S", types[0])
+                    .addMember("name", "$S", types.get(0))
                     .build();
             MethodSpec m = MethodSpec.methodBuilder(INIT_VALUE_METHOD_PREFIX + name)
                     .returns(KvoEvent.class)
@@ -356,7 +376,7 @@ public class KvoProcessor extends AbstractProcessor {
             String methodName = e.getSimpleName().toString();
             List<? extends VariableElement> ps = e.getParameters();
             VariableElement param = ps.get(0);
-            String[] types = getTypes(param);
+            List<String> types = getTypes(param);
             block.add("if ($L.getSource() instanceof $L \n" +
                     "       && ($L.getNewValue() == null || $L.getNewValue() instanceof $L) \n" +
                     "       && ($S.equals($L) || this.$L.equals($L)) && $S.equals($L.$L())) {\n" +
@@ -383,7 +403,7 @@ public class KvoProcessor extends AbstractProcessor {
                     "   } else {\n" +
                     "       $L.$L(events[0]);\n" +
                     "   }\n" +
-                    "}\n", NOTIFY_WATCHER_EVENT, types[0], NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types[1],
+                    "}\n", NOTIFY_WATCHER_EVENT, types.get(0), NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types.get(1),
                     IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(), NOTIFY_WATCHER_EVENT,
                     EVENT_GET_TAG, IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName, NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
                     thread, kvoWatchName, kvoThreadName, target, methodName, thread,
@@ -546,6 +566,37 @@ public class KvoProcessor extends AbstractProcessor {
             return false;
         }
         return true;
+    }
+
+    private List<? extends TypeMirror> getTypeArguments(Object targetType) {
+        Class cls = targetType.getClass();
+        try {
+            for (Method m : cls.getMethods()) {
+                if ("getTypeArguments".equals(m.getName())) {
+                    Object obj = m.invoke(targetType);
+                    return (List) obj;
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String typeNameWithoutTypeArguments(TypeName targetType) {
+        String name = targetType.toString();
+        return typeNameWithoutTypeArguments(name);
+    }
+
+    private String typeNameWithoutTypeArguments(String name) {
+        int index = name.indexOf("<");
+        String typeName = name;
+        if (index > 0) {
+            typeName = name.substring(0, index);
+        }
+//        Log.i(TAG, "typeNameWithoutTypeArguments name: %s, typeName: %s", name, typeName);
+        return typeName;
     }
 
     private static class Log {

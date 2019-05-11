@@ -261,7 +261,7 @@ class KvoHandler {
         CtField field = CtField.make("private final Set ${KVO_SOURCE_TAG_FIELD} = new CopyOnWriteArraySet();", source)
         source.addField(field)
 
-        CtMethod add = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_ADD_METHOD}(String tag) {\n" +
+        CtMethod add = CtMethod.make("public boolean ${KVO_SOURCE_TAG_ADD_METHOD}(String tag) {\n" +
                 "if (\$1 == null || \$1.length() == 0) {\n" +
                 "            return false;\n" +
                 "        }\n" +
@@ -269,7 +269,7 @@ class KvoHandler {
                 "}", source)
         source.addMethod(add)
 
-        CtMethod remove = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_REMOVE_METHOD}(String tag) {\n" +
+        CtMethod remove = CtMethod.make("public boolean ${KVO_SOURCE_TAG_REMOVE_METHOD}(String tag) {\n" +
                 "if (\$1 == null || \$1.length() == 0) {\n" +
                 "            return false;\n" +
                 "        }\n" +
@@ -291,7 +291,7 @@ class KvoHandler {
 //                "}", source)
 //        source.addMethod(removeAll)
 
-        CtMethod contain = CtMethod.make("final public boolean ${KVO_SOURCE_TAG_CONTAIN_METHOD}(String tag) {\n" +
+        CtMethod contain = CtMethod.make("public boolean ${KVO_SOURCE_TAG_CONTAIN_METHOD}(String tag) {\n" +
                 "if (\$1 == null || \$1.length() == 0) {\n" +
                 "            return false;\n" +
                 "        }\n" +

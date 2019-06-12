@@ -1,0 +1,101 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+//plugins {
+//    kotlin("kapt") version "1.3.31"
+//}
+
+//kapt {
+//    generateStubs = false
+//    correctErrorTypes = true
+//}
+
+
+
+android {
+    compileSdkVersion sdk_version as int
+
+
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion sdk_version as int
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildToolsVersion = '28.0.3'
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+
+    implementation "com.github.drumge:kvo-api:${kvo_api_version}"
+    implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
+
+    kapt "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
+
+}
+
+/*
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.drumge.kvo.plugin.KvoPlugin
+
+apply plugin: 'com.drumge.easy.plugin'
+
+easy_plugin {
+    enable = true
+
+    transformInputTypes(TransformManager.CONTENT_CLASS)
+    transformScopes(TransformManager.PROJECT_ONLY)
+
+    plugins{
+        kvo {
+            plugin = new KvoPlugin(project)
+        }
+    }
+}
+*/
+
+gradle.taskGraph.whenReady {
+    it.allTasks.each {
+        if ('kaptDebugKotlin' == it.name) {
+//            it.enabled = false
+            it.doFirst {
+                println('kaptDebugKotlin doFirst')
+            }
+            it.doLast {
+                println('kaptDebugKotlin doLast')
+            }
+        }
+    }
+
+}
+
+gradle.taskGraph.afterTask {
+    println("--- " + it)
+//    if ('kaptGenerateStubsDebugKotlin' == it.name || 'kaptDebugKotlin' == it.name) {
+//        println(it.inputs.sourceFiles.files)
+//        println(it.outputs.files.files)
+//
+//    }
+}

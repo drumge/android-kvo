@@ -10,9 +10,9 @@ import org.gradle.api.Project
 class KvoHandler {
     private static final String TAG = "KvoHandler"
 
-    private static final String SOURCE_CLASS_SUFFIX = '$$KvoSource.class'
-    private static final String WATCH_CLASS_SUFFIX = '$$KvoTargetProxy.class'
-    private static final String CREATOR_CLASS_SUFFIX = '$$KvoTargetCreator'
+    private static final String SOURCE_CLASS_SUFFIX = '_K_KvoSource.class'
+    private static final String WATCH_CLASS_SUFFIX = '_K_KvoTargetProxy.class'
+    private static final String CREATOR_CLASS_SUFFIX = '_K_KvoTargetCreator'
     private static final String SET_METHOD_PREFIX = "set"
     private static final String GET_NAME_METHOD_PREFIX = "kw_"
     private static final String INIT_VALUE_METHOD_PREFIX = "initValue_"
@@ -48,7 +48,7 @@ class KvoHandler {
         }
     }
 
-    public void handle(String source) {
+    public void handleKvoSource(String source) {
         Log.i(TAG, "handle sourcePath: %s", source)
         if (!source.endsWith(File.separator)) {
             source = source + File.separator

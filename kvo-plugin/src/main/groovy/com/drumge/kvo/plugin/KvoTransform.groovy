@@ -67,8 +67,13 @@ class KvoTransform extends BaseEasyTransform {
 //        Log.i(TAG, mProject.name + " onEachDirectoryOutput directoryInput: %s, outputs: %s", directoryInput, outputs.absolutePath)
         if (hasJavaCompiler) {
             String outPath = outputs.absolutePath + File.separator
-            mHandler.handle(outPath)
+            mHandler.handleKvoSource(outPath)
         }
+    }
+
+    @Override
+    void onAfterDirectory() {
+        super.onAfterDirectory()
     }
 
     @Override

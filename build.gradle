@@ -13,7 +13,7 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
+        classpath "com.android.tools.build:gradle:${gradle_version}"
         
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -22,6 +22,9 @@ buildscript {
         classpath "com.github.drumge:kvo-plugin:${kvo_plugin_version}"
 
         classpath "net.ltgt.gradle:gradle-apt-plugin:0.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:${kotlin_version}"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.18"
     }
 }
 
@@ -40,3 +43,5 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+gradle.ext.dokkaTaskType = org.jetbrains.dokka.gradle.DokkaTask

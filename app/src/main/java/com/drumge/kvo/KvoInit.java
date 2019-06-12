@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.log.IKvoLog;
+import com.drumge.kvo.api.runtime.IKvoRuntime;
 import com.drumge.kvo.api.thread.IKvoThread;
 
 import java.util.concurrent.Executors;
@@ -23,6 +24,15 @@ public class KvoInit {
     public static void initKvo() {
         Kvo.getInstance().setLog(new KvoLog());
         Kvo.getInstance().setThread(new KvoThread());
+        Kvo.getInstance().setRumtime(new KvoRuntime());
+    }
+
+    private static class KvoRuntime implements IKvoRuntime {
+
+        @Override
+        public boolean isRelease() {
+            return false;
+        }
     }
 
     private static class KvoThread implements IKvoThread {

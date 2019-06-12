@@ -15,12 +15,12 @@ import javax.lang.model.element.Element;
  */
 
 public class KvoTargetInfo {
-    final String packageName;
-    final String simpleName;
-    Element target;
-    Set<ExecutableElement> methods;
+    public final String packageName;
+    public final String simpleName;
+    public Element target;
+    public Set<ExecutableElement> methods;
 
-    KvoTargetInfo(@NonNull String pn, @NonNull String sn) {
+    public KvoTargetInfo(@NonNull String pn, @NonNull String sn) {
         packageName = pn;
         simpleName = sn;
     }

@@ -9,7 +9,7 @@ import javax.lang.model.element.TypeElement;
  */
 
 public class KvoSourceInfo {
-    String className;
-    TypeElement clsElement;
-    List<TypeElement> innerCls;
+    public String className;
+    public TypeElement clsElement;
+    public List<TypeElement> innerCls;
 }

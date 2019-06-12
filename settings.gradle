@@ -1,4 +1,4 @@
-include ':app'
+include ':app', ':kvo-example-kotlin'
 
 
 include ':kvo-annotation'

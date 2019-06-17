@@ -34,7 +34,7 @@ class KvoKotlinActivity : Activity() {
         Log.i(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}, source: ${event.source}")
     }
 
-//    @KvoWatch(name = K_JavaSource.example, thread = KvoWatch.Thread.MAIN)
+    @KvoWatch(name = K_JavaSource.example, thread = KvoWatch.Thread.MAIN)
     fun onExampleChange(event: KvoEvent<KtSource, String>) {
         Log.i(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}, source: ${event.source}")
     }

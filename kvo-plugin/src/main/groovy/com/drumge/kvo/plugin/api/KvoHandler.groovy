@@ -33,6 +33,7 @@ class KvoHandler {
     private ClassPool pool
     private final List<String> classPaths = new ArrayList<>()
     private final List<ClassPath> classPathList = new ArrayList<>()
+    private final List<String> sourcePath = new ArrayList<>()
 
     public KvoHandler(Project project) {
         mProject = project
@@ -55,7 +56,14 @@ class KvoHandler {
         }
         appendClassPath(source)
         handleSource(source)
-        handleKvo(source)
+        sourcePath.add(source)
+//        handleKvo(source)
+    }
+
+    void onAfterDirectory() {
+        sourcePath.each {
+            handleKvo(it)
+        }
     }
 
     public void finish() {
@@ -95,6 +103,7 @@ class KvoHandler {
         pool.clearImportedPackages()
         classPathList.clear()
         classPaths.clear()
+        sourcePath.clear()
     }
 
     /**
@@ -104,8 +113,10 @@ class KvoHandler {
      */
     private boolean handleSource(String outPath) {
         boolean inject = false
+        Log.i(TAG, "handleSource path: %s", outPath)
         mProject.fileTree(outPath).findAll { File file ->
             String path = file.absolutePath
+            Log.i(TAG, "handleSource  path file: %s", path)
             return path.endsWith(SOURCE_CLASS_SUFFIX)
         }.each { File file ->
             inject = true
@@ -147,6 +158,7 @@ class KvoHandler {
      * @param output
      */
     private void processSource(String className, String output) {
+        Log.i(TAG, "plugin processSource className: %s, output: %s", className, output)
         CtClass source = pool.getCtClass(className)
         if (source.isFrozen()) {
             source.defrost()

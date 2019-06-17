@@ -42,6 +42,7 @@ class KvoInject extends DefaultTask {
         mKvoHandler.appendDirClass(getProject().compileJava.classpath.files.path)
 
         mKvoHandler.handleKvoSource(destinationDir.absolutePath)
+        mKvoHandler.onAfterDirectory()
     }
 
     @Override

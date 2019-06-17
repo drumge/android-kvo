@@ -29,7 +29,7 @@ class KvoKotlinActivity : Activity() {
         Kvo.getInstance().bind(this, ktSource)
     }
 
-//    @KvoWatch(name = K_KtSource.time, thread = KvoWatch.Thread.MAIN)
+    @KvoWatch(name = K_KtSource.time, thread = KvoWatch.Thread.MAIN)
     fun onTimeChange(event: KvoEvent<KtSource, Long>) {
         Log.i(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}, source: ${event.source}")
     }

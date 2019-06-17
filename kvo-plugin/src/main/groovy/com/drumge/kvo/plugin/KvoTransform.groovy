@@ -74,6 +74,7 @@ class KvoTransform extends BaseEasyTransform {
     @Override
     void onAfterDirectory() {
         super.onAfterDirectory()
+        mHandler.onAfterDirectory()
     }
 
     @Override

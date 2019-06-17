@@ -68,9 +68,12 @@ class KvoHandler {
      * @param path
      */
     public final void appendClassPath(String path) {
+        Log.i(TAG, "appendClassPath path: %s", path)
         if (path == null || path.length() == 0 || classPaths.contains(path)) {
             return
         }
+        // todo compile_library_classes 目录下的 module class 不包含 transform 插入代码
+        path = path.replace('compile_library_classes', 'runtime_library_classes')
         classPaths.add(path)
         ClassPath cp = pool.appendClassPath(path)
         classPathList.add(cp)

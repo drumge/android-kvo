@@ -170,9 +170,10 @@ public class KvoProcessor extends AbstractProcessor {
 //        Log.i(TAG, "genTargetClass info.simpleName: %s, info.target: %s", info.simpleName, info.target);
         TypeName targetType = TypeName.get(info.target.asType());
 //        TypeName weakTargetType = TypeName.get(WeakReference.class);
-        ParameterizedTypeName weakTargetType = ParameterizedTypeName.get(ClassName.get(WeakReference.class), targetType);
+        ParameterizedTypeName weakTargetType =
+                ParameterizedTypeName.get(ClassName.get(WeakReference.class), targetType);
         String targetClassName = info.simpleName + PROXY_CLASS_SUFFIX;
-        TypeSpec.Builder builder= TypeSpec.classBuilder(targetClassName)
+        TypeSpec.Builder builder = TypeSpec.classBuilder(targetClassName)
                 .addJavadoc(JAVA_DOC)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetProxy.class), targetType));
 
@@ -183,7 +184,8 @@ public class KvoProcessor extends AbstractProcessor {
             }
         }
 
-        FieldSpec fTarget = FieldSpec.builder(weakTargetType, TARGET_CLASS_FIELD, Modifier.FINAL, Modifier.PRIVATE).build();
+        FieldSpec fTarget =
+                FieldSpec.builder(weakTargetType, TARGET_CLASS_FIELD, Modifier.FINAL, Modifier.PRIVATE).build();
 
         String target = "target";
         MethodSpec constructor = MethodSpec.constructorBuilder()
@@ -199,11 +201,12 @@ public class KvoProcessor extends AbstractProcessor {
                 .addAnnotation(Override.class)
                 .addParameter(TypeName.OBJECT, p)
                 .addCode("if (this == $L) {\n" +
-                        "   return true;\n" +
-                        "} else if ($L instanceof $L) {\n" +
-                        "   return this.$L.get() == (($L) $L).$L.get();\n" +
-                        "}\n" +
-                        "return false;\n", p, p, targetClassName, TARGET_CLASS_FIELD, targetClassName, p, TARGET_CLASS_FIELD)
+                                "   return true;\n" +
+                                "} else if ($L instanceof $L) {\n" +
+                                "   return this.$L.get() == (($L) $L).$L.get();\n" +
+                                "}\n" +
+                                "return false;\n", p, p, targetClassName, TARGET_CLASS_FIELD, targetClassName, p,
+                        TARGET_CLASS_FIELD)
                 .build();
 
         MethodSpec hashCode = MethodSpec.methodBuilder("hashCode")
@@ -234,7 +237,9 @@ public class KvoProcessor extends AbstractProcessor {
                 .addMethod(genIsTargetValidMethod())
                 .addMethod(hashCode);
 
-        TypeSpec proxy = builder.build();
+        TypeSpec proxy = builder
+                .addOriginatingElement(new ProcessVariableElement(info.target))
+                .build();
         try {
             JavaFile clsJavaFile = JavaFile.builder(info.packageName, proxy)
                     .addStaticImport(KvoWatch.Thread.class, "*")
@@ -252,7 +257,8 @@ public class KvoProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addParameter(TypeName.get(Object.class), TARGET_CLASS_FIELD, Modifier.FINAL)
                 .addCode("if ($L instanceof $L) { return this.$L.get() == $L;} return false;",
-                        TARGET_CLASS_FIELD, typeNameWithoutTypeArguments(targetType), TARGET_CLASS_FIELD, TARGET_CLASS_FIELD)
+                        TARGET_CLASS_FIELD, typeNameWithoutTypeArguments(targetType), TARGET_CLASS_FIELD,
+                        TARGET_CLASS_FIELD)
                 .build();
         return method;
     }
@@ -275,9 +281,11 @@ public class KvoProcessor extends AbstractProcessor {
         TypeName targetType = TypeName.get(info.target.asType());
         TypeName proxyType = ClassName.get(info.packageName, proxyClassName);
 
-        TypeSpec.Builder builder= TypeSpec.classBuilder(creatorClassName)
+        TypeSpec.Builder builder = TypeSpec.classBuilder(creatorClassName)
                 .addJavadoc(JAVA_DOC)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetCreator.class), proxyType, targetType));
+                .addOriginatingElement(new ProcessVariableElement(info.target))
+                .addSuperinterface(
+                        ParameterizedTypeName.get(ClassName.get(IKvoTargetCreator.class), proxyType, targetType));
 
         if (info.target instanceof TypeElement) {
             TypeElement te = (TypeElement) info.target;
@@ -298,7 +306,8 @@ public class KvoProcessor extends AbstractProcessor {
         MethodSpec newCreator = MethodSpec.methodBuilder("registerCreator")
                 .returns(int.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addCode("$L.registerTarget($L.class, new $T());\n", KVO_PROXY_CREATOR_INSTANCE, info.target.toString(), creatorType)
+                .addCode("$L.registerTarget($L.class, new $T());\n", KVO_PROXY_CREATOR_INSTANCE, info.target.toString(),
+                        creatorType)
                 .addCode("return 0;\n", creatorType)
                 .build();
 
@@ -319,7 +328,7 @@ public class KvoProcessor extends AbstractProcessor {
         Set<ExecutableElement> methods = info.methods;
         Set<MethodSpec> ms = new HashSet<>(methods.size());
         for (ExecutableElement e : methods) {
-            String name =  e.getSimpleName().toString();
+            String name = e.getSimpleName().toString();
             MethodSpec m = MethodSpec.methodBuilder(GET_NAME_METHOD_PREFIX + name)
                     .returns(String.class)
                     .addJavadoc("the value is intermediate product, will be change finally, don't care about it.\n")
@@ -335,7 +344,7 @@ public class KvoProcessor extends AbstractProcessor {
         Set<ExecutableElement> methods = info.methods;
         Set<MethodSpec> ms = new HashSet<>(methods.size());
         for (ExecutableElement e : methods) {
-            String name =  e.getSimpleName().toString();
+            String name = e.getSimpleName().toString();
             List<? extends VariableElement> ps = e.getParameters();
             VariableElement param = ps.get(0);
             List<String> types = getTypes(param);
@@ -348,7 +357,8 @@ public class KvoProcessor extends AbstractProcessor {
                     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .addAnnotation(annotation)
                     .addParameter(KvoEvent.class, NOTIFY_WATCHER_EVENT)
-                    .addCode("return KvoEvent.newEvent($L.getSource(), null, null, $L.getTag());\n", NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT)
+                    .addCode("return KvoEvent.newEvent($L.getSource(), null, null, $L.getTag());\n",
+                            NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT)
                     .build();
             ms.add(m);
         }
@@ -378,43 +388,45 @@ public class KvoProcessor extends AbstractProcessor {
             VariableElement param = ps.get(0);
             List<String> types = getTypes(param);
             block.add("if ($L.getSource() instanceof $L \n" +
-                    "       && ($L.getNewValue() == null || $L.getNewValue() instanceof $L) \n" +
-                    "       && ($S.equals($L) || this.$L.equals($L)) && $S.equals($L.$L())) {\n" +
-                    "   final KvoEvent[] events = new KvoEvent[1];\n" +
-                    "   if ($S.equals($L)) {\n" +
-                    "       events[0] = this.$L($L);\n" +
-                    "   } else {\n" +
-                    "       events[0] = $L;\n" +
-                    "   }\n" +
-                    "   if ($L == $T.Thread.MAIN) {\n" +
-                    "       $T.getInstance().mainThread(new Runnable() {\n" +
-                    "           @Override\n" +
-                    "           public void run() {\n" +
-                    "               $L.$L(events[0]);\n" +
-                    "           }\n" +
-                    "         });\n" +
-                    "   } else if ($L == $T.Thread.WORK) {\n" +
-                    "       $T.getInstance().workThread(new Runnable() {\n" +
-                    "           @Override\n" +
-                    "           public void run() {\n" +
-                    "               $L.$L(events[0]);\n" +
-                    "           }\n" +
-                    "       });\n" +
-                    "   } else {\n" +
-                    "       $L.$L(events[0]);\n" +
-                    "   }\n" +
-                    "}\n", NOTIFY_WATCHER_EVENT, types.get(0), NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types.get(1),
-                    IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(), NOTIFY_WATCHER_EVENT,
-                    EVENT_GET_TAG, IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName, NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
+                            "       && ($L.getNewValue() == null || $L.getNewValue() instanceof $L) \n" +
+                            "       && ($S.equals($L) || this.$L.equals($L)) && $S.equals($L.$L())) {\n" +
+                            "   final KvoEvent[] events = new KvoEvent[1];\n" +
+                            "   if ($S.equals($L)) {\n" +
+                            "       events[0] = this.$L($L);\n" +
+                            "   } else {\n" +
+                            "       events[0] = $L;\n" +
+                            "   }\n" +
+                            "   if ($L == $T.Thread.MAIN) {\n" +
+                            "       $T.getInstance().mainThread(new Runnable() {\n" +
+                            "           @Override\n" +
+                            "           public void run() {\n" +
+                            "               $L.$L(events[0]);\n" +
+                            "           }\n" +
+                            "         });\n" +
+                            "   } else if ($L == $T.Thread.WORK) {\n" +
+                            "       $T.getInstance().workThread(new Runnable() {\n" +
+                            "           @Override\n" +
+                            "           public void run() {\n" +
+                            "               $L.$L(events[0]);\n" +
+                            "           }\n" +
+                            "       });\n" +
+                            "   } else {\n" +
+                            "       $L.$L(events[0]);\n" +
+                            "   }\n" +
+                            "}\n", NOTIFY_WATCHER_EVENT, types.get(0), NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT, types.get(1),
+                    IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, getName, NOTIFY_WATCHER_NAME, w.tag(),
+                    NOTIFY_WATCHER_EVENT,
+                    EVENT_GET_TAG, IKvoTargetProxy.INIT_METHOD_NAME, NOTIFY_WATCHER_NAME, initName,
+                    NOTIFY_WATCHER_EVENT, NOTIFY_WATCHER_EVENT,
                     thread, kvoWatchName, kvoThreadName, target, methodName, thread,
                     kvoWatchName, kvoThreadName, target, methodName, target, methodName);
         }
         return block.build();
     }
 
-
     /**
      * 检查 @KvoSource 注解修饰的被观察对象，生成对应属性的name
+     *
      * @param env
      */
     private void processSource(RoundEnvironment env) {
@@ -440,6 +452,7 @@ public class KvoProcessor extends AbstractProcessor {
                 sourceInfo.className = className;
                 allClass.put(className, sourceInfo);
             }
+            sourceInfo.clsElement = te;
             if (inner == null) {
                 sourceInfo.clsElement = te;
             } else {
@@ -465,7 +478,8 @@ public class KvoProcessor extends AbstractProcessor {
             kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
                     .addModifiers(Modifier.PUBLIC)
                     .addJavadoc(JAVA_DOC)
-                    .addFields(fields);
+                    .addFields(fields)
+                    .addOriginatingElement(new ProcessVariableElement(info.clsElement));
             genTempClass(info.clsElement, SOURCE_CLASS_SUFFIX, null);
         }
         if (info.innerCls != null && !info.innerCls.isEmpty()) {
@@ -476,9 +490,10 @@ public class KvoProcessor extends AbstractProcessor {
                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                         .addFields(fields)
                         .addJavadoc(JAVA_DOC)
+                        .addOriginatingElement(te)
                         .build();
                 innerList.add(typeSpec);
-                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null);
+                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null, te);
             }
             if (kvoSourceBuilder == null) {
                 kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
@@ -528,12 +543,13 @@ public class KvoProcessor extends AbstractProcessor {
     private void genTempClass(Element eClass, String suffix, Iterable<MethodSpec> methods) {
         String pack = getPackage(eClass.toString());
         String simpleName = eClass.getSimpleName().toString() + suffix;
-        genTempClass(pack, simpleName, methods);
+        genTempClass(pack, simpleName, methods, eClass);
     }
 
-    private void genTempClass(String pack, String simpleName, Iterable<MethodSpec> methods) {
-        TypeSpec.Builder builder= TypeSpec.classBuilder(simpleName)
-                .addJavadoc(JAVA_DOC + "\n just intermediate class, not been packaged in apk");
+    private void genTempClass(String pack, String simpleName, Iterable<MethodSpec> methods, Element eClass) {
+        TypeSpec.Builder builder = TypeSpec.classBuilder(simpleName)
+                .addJavadoc(JAVA_DOC + "\n just intermediate class, not been packaged in apk")
+                .addOriginatingElement(new ProcessVariableElement(eClass));
         if (methods != null) {
             builder.addMethods(methods);
         }
@@ -562,7 +578,9 @@ public class KvoProcessor extends AbstractProcessor {
         if (e.getKind() == ElementKind.FIELD
                 && e.getAnnotation(KvoIgnore.class) == null
                 && !e.getModifiers().contains(Modifier.PRIVATE)) {
-            Log.e(TAG, "%s#%s is illegal, it may need to be private, or you may add @KvoIgnore to the field, or add @KvoSource(check = false) to the class", eClass, e);
+            Log.e(TAG,
+                    "%s#%s is illegal, it may need to be private, or you may add @KvoIgnore to the field, or add @KvoSource(check = false) to the class",
+                    eClass, e);
             return false;
         }
         return true;
@@ -601,6 +619,7 @@ public class KvoProcessor extends AbstractProcessor {
 
     private static class Log {
         private static Messager messager;
+
         static void init(Messager messager) {
             Log.messager = messager;
         }

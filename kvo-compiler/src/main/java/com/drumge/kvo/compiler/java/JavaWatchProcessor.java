@@ -4,6 +4,7 @@ import com.drumge.kvo.annotation.KvoAssist;
 import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.KvoEvent;
 import com.drumge.kvo.compiler.KvoTargetInfo;
+import com.drumge.kvo.compiler.ProcessVariableElement;
 import com.drumge.kvo.inner.IKvoTargetCreator;
 import com.drumge.kvo.inner.IKvoTargetProxy;
 import com.drumge.kvo.inner.log.KLog;
@@ -145,6 +146,7 @@ public class JavaWatchProcessor {
 
         TypeSpec.Builder builder= TypeSpec.classBuilder(creatorClassName)
                 .addJavadoc(JAVA_DOC)
+                .addOriginatingElement(new ProcessVariableElement(info.target))
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetCreator.class), proxyType, targetType));
 
         if (info.target instanceof TypeElement) {

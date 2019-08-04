@@ -3,6 +3,7 @@ package com.drumge.kvo.compiler.kt
 import com.drumge.kvo.annotation.KvoSource
 import com.drumge.kvo.compiler.JAVA_DOC
 import com.drumge.kvo.compiler.KvoSourceInfo
+import com.drumge.kvo.compiler.ProcessVariableElement
 import com.drumge.kvo.compiler.SOURCE_CLASS_SUFFIX
 import com.drumge.kvo.compiler.SOURCE_FILED_CLASS_PREFIX
 import com.drumge.kvo.compiler.checkFieldLegal
@@ -32,6 +33,7 @@ class KtSourceProcessor(private val processingEnv: ProcessingEnvironment) {
         val pack = getPackage(info.className)
         var kvoSourceBuilder = TypeSpec.objectBuilder(simpleName)
             .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
+            .addOriginatingElement(ProcessVariableElement(info.clsElement))
             .addKdoc(JAVA_DOC)
         if (info.clsElement != null) {
             val fields = getPrivateFields(info.clsElement)
@@ -46,9 +48,10 @@ class KtSourceProcessor(private val processingEnv: ProcessingEnvironment) {
                     .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
                     .addProperties(fields)
                     .addKdoc(JAVA_DOC)
+                    .addOriginatingElement(te)
                     .build()
                 innerList.add(typeSpec)
-                genTempClass(pack, originalSimpleName + "$" + te.simpleName + SOURCE_CLASS_SUFFIX)
+                genTempClass(pack, originalSimpleName + "$" + te.simpleName + SOURCE_CLASS_SUFFIX, te)
             }
             kvoSourceBuilder.addTypes(innerList)
         }
@@ -90,12 +93,13 @@ class KtSourceProcessor(private val processingEnv: ProcessingEnvironment) {
     private fun genTempClass(eClass: Element, suffix: String) {
         val pack = getPackage(eClass.toString())
         val simpleName = "${eClass.simpleName}$suffix"
-        genTempClass(pack, simpleName)
+        genTempClass(pack, simpleName, eClass)
     }
 
-    private fun genTempClass(pack: String, simpleName: String) {
+    private fun genTempClass(pack: String, simpleName: String, eClass: Element) {
         val builder = TypeSpec.classBuilder(simpleName)
             .addKdoc("$JAVA_DOC\n just intermediate class, not been packaged in apk")
+            .addOriginatingElement(eClass)
         writeFile(pack, builder, processingEnv.filer)
     }
 }

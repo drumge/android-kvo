@@ -3,10 +3,11 @@ package com.github.drumge.kvo.example.kotlin
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import com.drumge.kvo.annotation.KvoWatch
 import com.drumge.kvo.api.Kvo
 import com.drumge.kvo.api.KvoEvent
-import com.github.drumge.kvo.example.java.K_JavaSource
+import kotlinx.android.synthetic.main.kotlin_activity_main.*
 
 /**
  * Created by chenrenzhan on 2019/5/11.
@@ -21,21 +22,38 @@ class KvoKotlinActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        setContentView(R.layout.kotlin_activity_main)
+
         ktSource = KtSource()
 
         ktSource.aa = 10
         ktSource.sChar = 'c'
 
         Kvo.getInstance().bind(this, ktSource)
+
+        exampleBtn.setOnClickListener {
+            ktSource.example = exampleInput.text.toString()
+        }
+
+        timeBtn.setOnClickListener {
+            ktSource.time = timeInput.text.toString().toLong()
+        }
     }
 
-    @KvoWatch(name = K_KtSource.time, thread = KvoWatch.Thread.MAIN)
+//    @KvoWatch(name = K_KtSource.time, thread = KvoWatch.Thread.MAIN)
+    @KvoWatch(name = "time", thread = KvoWatch.Thread.MAIN)
     fun onTimeChange(event: KvoEvent<KtSource, Long>) {
-        Log.i(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}, source: ${event.source}")
+        toast(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}")
     }
 
-    @KvoWatch(name = K_JavaSource.example, thread = KvoWatch.Thread.MAIN)
+//    @KvoWatch(name = K_JavaSource.example, thread = KvoWatch.Thread.MAIN)
+    @KvoWatch(name = "example", thread = KvoWatch.Thread.MAIN)
     fun onExampleChange(event: KvoEvent<KtSource, String>) {
-        Log.i(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}, source: ${event.source}")
+        toast(TAG, "onTimeChange oldValue: ${event.oldValue}, newValue: ${event.newValue}")
+    }
+
+    private fun toast(tag: String, msg: String) {
+        Toast.makeText(this, "$tag: $msg", Toast.LENGTH_SHORT).show()
+        Log.i(tag, msg)
     }
 }

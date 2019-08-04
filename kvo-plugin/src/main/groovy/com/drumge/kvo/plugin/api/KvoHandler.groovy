@@ -34,6 +34,8 @@ class KvoHandler {
     private final List<String> classPaths = new ArrayList<>()
     private final List<ClassPath> classPathList = new ArrayList<>()
     private final List<String> sourcePath = new ArrayList<>()
+    private final List<String> sourceClass = new ArrayList<>()
+    private final Map<String, List<String>> watchClassMap = new HashMap<>()
 
     public KvoHandler(Project project) {
         mProject = project
@@ -55,14 +57,16 @@ class KvoHandler {
             source = source + File.separator
         }
         appendClassPath(source)
-        handleSource(source)
+        findInsertClass(source)
         sourcePath.add(source)
-//        handleKvo(source)
     }
 
     void onAfterDirectory() {
         sourcePath.each {
-            handleKvo(it)
+            handleSource(it)
+        }
+        sourcePath.each {
+            handleWatch(it)
         }
     }
 
@@ -104,6 +108,36 @@ class KvoHandler {
         classPathList.clear()
         classPaths.clear()
         sourcePath.clear()
+        sourceClass.clear()
+    }
+
+    /**
+     * 查找代插入代码的类
+     * @param outPath
+     */
+    private void findInsertClass(String outPath) {
+        Log.i(TAG, "findInsertClass path: %s", outPath)
+        mProject.fileTree(outPath).findAll { File file ->
+            String path = file.absolutePath
+//            Log.i(TAG, "findInsertClass  path file: %s", path)
+            return path.endsWith(SOURCE_CLASS_SUFFIX) || path.endsWith(WATCH_CLASS_SUFFIX)
+        }.each { File file ->
+            String path = file.absolutePath
+            String classPath = path.replace(outPath, '')
+            if (path.endsWith(SOURCE_CLASS_SUFFIX)) {
+                String kvoSourceName = classPath.replace(SOURCE_CLASS_SUFFIX, '.class')
+                sourceClass.add(kvoSourceName)
+                mProject.delete(file)
+            } else if (path.endsWith(WATCH_CLASS_SUFFIX)) {
+                String kvoWatchName = classPath.replace(WATCH_CLASS_SUFFIX, '.class')
+                List clsList = watchClassMap.get(outPath)
+                if (clsList == null) {
+                    clsList = new ArrayList()
+                    watchClassMap.put(outPath, clsList)
+                }
+                clsList.add(kvoWatchName)
+            }
+        }
     }
 
     /**
@@ -113,18 +147,19 @@ class KvoHandler {
      */
     private boolean handleSource(String outPath) {
         boolean inject = false
-        Log.i(TAG, "handleSource path: %s", outPath)
+        Log.i(TAG, "handleSource path: %s, sourceClass: %s", outPath, sourceClass)
         mProject.fileTree(outPath).findAll { File file ->
             String path = file.absolutePath
-            Log.i(TAG, "handleSource  path file: %s", path)
-            return path.endsWith(SOURCE_CLASS_SUFFIX)
+            String classPath = path.replace(outPath, '')
+//            Log.i(TAG, "handleSource each path classPath: %s", classPath)
+            return sourceClass.contains(classPath)
         }.each { File file ->
             inject = true
             String path = file.absolutePath
-            String proxyName = path.replace(outPath, '').replaceAll(EasyUtils.regSeparator(), '.')
-            String kvoSourceName = proxyName.replace(SOURCE_CLASS_SUFFIX, '')
+            Log.i(TAG, "handleSource path file: %s", path)
+            String kvoSourceName = path.replace(outPath, '').replaceAll(EasyUtils.regSeparator(), '.')
+                    .replace('.class', '')
             processSource(kvoSourceName, outPath)
-            mProject.delete(file)
         }
         return inject
     }
@@ -134,20 +169,31 @@ class KvoHandler {
      * @param outPath
      * @return true -- 有注入代码，需要压缩回jar
      */
-    private boolean handleKvo(String outPath) {
+    private boolean handleWatch(String outPath) {
+        Log.i(TAG, "handleWatch path: %s, watchClassMap: %s", outPath, watchClassMap)
+
         boolean inject = false
-        mProject.fileTree(outPath).findAll { File file ->
-            String path = file.absolutePath
-            return path.endsWith(WATCH_CLASS_SUFFIX)
-        }.each { File file ->
+        mProject.fileTree(outPath).each { File file ->
             inject = true
             String path = file.absolutePath
-            String proxyName = path.replace(outPath, '').replaceAll(EasyUtils.regSeparator(), '.')
-            String targetName = proxyName.replace(WATCH_CLASS_SUFFIX, '')
-            String proxy = proxyName.replace('.class', '')
-            addTargetInterface(targetName, outPath)
-            processWatch(proxy, targetName, outPath)
-            injectRegister(targetName, outPath)
+//            Log.i(TAG, "handleWatch path file: %s", path)
+            String classPath = path.replace(outPath, '')
+            String proxyOutPath = ''
+            for (entry in watchClassMap.entrySet()) {
+                if (entry.value.contains(classPath)) {
+                    proxyOutPath = entry.key
+                    break
+                }
+            }
+            if (proxyOutPath != '') {
+                String clsName = classPath.replaceAll(EasyUtils.regSeparator(), '.')
+                String targetName = clsName.replace('.class', '')
+                addTargetInterface(targetName, outPath)
+                injectRegister(targetName, outPath)
+
+                String proxy = targetName + '_K_KvoTargetProxy'
+                processWatch(proxy, targetName, proxyOutPath)
+            }
         }
         return inject
     }
@@ -213,6 +259,7 @@ class KvoHandler {
      * @param outPath
      */
     private void processWatch(String proxyName, String className, String outPath) {
+        Log.i(TAG, "processWatch proxyName: %s, className: %s, outPath: %s", proxyName, className, outPath)
         CtClass proxy = pool.getCtClass(proxyName)
         if (proxy.isFrozen()) {
             proxy.defrost()

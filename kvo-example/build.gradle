@@ -33,6 +33,9 @@ dependencies {
     implementation "com.github.drumge:kvo-annotation:${kvo_annotation_version}"
 
     kapt "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+//    annotationProcessor "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+//    implementation "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
+//    kapt project(':kvo-compiler')
 
 }
 

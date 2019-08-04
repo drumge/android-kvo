@@ -1,5 +1,6 @@
 package com.github.drumge.kvo.example.kotlin
 
+import com.drumge.kvo.annotation.KvoBind
 import com.drumge.kvo.annotation.KvoIgnore
 import com.drumge.kvo.annotation.KvoSource
 
@@ -23,4 +24,10 @@ class KtSource {
     var mDouble: Double = 0.toDouble()
     var mBoolean: Boolean = false
     var sChar: Char = ' '
+
+    @KvoBind(name = "sChar")
+//    @KvoBind(name = K_KtSource.sChar)
+    fun setChar(c: Char) {
+
+    }
 }

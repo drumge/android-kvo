@@ -12,6 +12,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @KvoSource(check = false)
 public abstract class BaseSource {
     private CopyOnWriteArrayList<String> list;
+    private String baseClass;
+
+    public void setBaseClass(String baseClass) {
+        this.baseClass = baseClass;
+    }
 
     @KvoBind(name = K_BaseSource.list)
     public void setList(CopyOnWriteArrayList<String> list) {

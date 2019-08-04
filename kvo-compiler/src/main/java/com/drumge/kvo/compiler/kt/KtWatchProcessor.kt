@@ -16,6 +16,7 @@ import com.drumge.kvo.compiler.Log
 import com.drumge.kvo.compiler.NOTIFY_WATCHER_EVENT
 import com.drumge.kvo.compiler.NOTIFY_WATCHER_NAME
 import com.drumge.kvo.compiler.PROXY_CLASS_SUFFIX
+import com.drumge.kvo.compiler.ProcessVariableElement
 import com.drumge.kvo.compiler.TAG
 import com.drumge.kvo.compiler.TARGET_CLASS_FIELD
 import com.drumge.kvo.compiler.javaToKotlinType
@@ -128,6 +129,7 @@ class KtWatchProcessor(private val processingEnv: ProcessingEnvironment) {
         val builder = TypeSpec.classBuilder(creatorClassName)
             .addKdoc(JAVA_DOC)
             .addSuperinterface(IKvoTargetCreator::class.asClassName().parameterizedBy(proxyType, targetType))
+            .addOriginatingElement(ProcessVariableElement(info.target))
 
         if (info.target is TypeElement) {
             val te = info.target as TypeElement

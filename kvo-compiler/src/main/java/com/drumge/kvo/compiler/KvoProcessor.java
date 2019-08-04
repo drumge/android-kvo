@@ -53,7 +53,7 @@ public class KvoProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
         super.init(processingEnvironment);
         Log.init(processingEnv.getMessager());
-        Log.w(TAG, "getSupportedAnnotationTypes init");
+        // Log.w(TAG, "getSupportedAnnotationTypes init");
         mJavaSourceProcessor = new JavaSourceProcessor(processingEnv);
         mJavaWatchProcessor = new JavaWatchProcessor(processingEnv);
         mKtSourceProcessor = new KtSourceProcessor(processingEnv);
@@ -65,7 +65,7 @@ public class KvoProcessor extends AbstractProcessor {
         Set<String> annotation = new LinkedHashSet<>();
         annotation.add(KvoSource.class.getCanonicalName());
         annotation.add(KvoWatch.class.getCanonicalName());
-        Log.i(TAG, "getSupportedAnnotationTypes: %s", annotation);
+        // Log.i(TAG, "getSupportedAnnotationTypes: %s", annotation);
         return annotation;
     }
 
@@ -78,7 +78,7 @@ public class KvoProcessor extends AbstractProcessor {
     }
 
     private void processKvo(Set<? extends TypeElement> set, RoundEnvironment env) {
-        Log.w(TAG, "kvo processKvo set: %s, env: %s", set, env);
+        // Log.w(TAG, "kvo processKvo set: %s, env: %s", set, env);
         processSource(env);
         processWatch(env);
     }
@@ -89,11 +89,11 @@ public class KvoProcessor extends AbstractProcessor {
      */
     private void processWatch(RoundEnvironment env) {
         Set<? extends Element> elements = env.getElementsAnnotatedWith(KvoWatch.class);
-        Log.w(TAG, "processWatch elements: %s", elements);
+        // Log.w(TAG, "processWatch elements: %s", elements);
         Set<KvoTargetInfo> targets = new HashSet<>();
         for (Element eMethod : elements) {
             ExecutableElement em = (ExecutableElement) eMethod;
-            Log.w(TAG, "processWatch %s, parent: %s", em, em.getEnclosingElement());
+            // Log.w(TAG, "processWatch %s, parent: %s", em, em.getEnclosingElement());
             List<? extends VariableElement> ps = em.getParameters();
             VariableElement param;
             if (ps.size() != 1 || !(param = ps.get(0)).asType().toString().startsWith(KVO_EVENT_NAME)
@@ -142,7 +142,7 @@ public class KvoProcessor extends AbstractProcessor {
     private void processSource(RoundEnvironment env) {
         Set<? extends Element> elements = env.getElementsAnnotatedWith(KvoSource.class);
         Map<String, KvoSourceInfo> allClass = new HashMap<>();
-        Log.w(TAG, "processSource elements: %s", elements);
+        // Log.w(TAG, "processSource elements: %s", elements);
         for (Element eClass : elements) {
             if (!(eClass instanceof TypeElement)) {
                 Log.w(TAG, "processSource is not TypeElement %s", eClass);
@@ -151,7 +151,7 @@ public class KvoProcessor extends AbstractProcessor {
             TypeElement te = (TypeElement) eClass;
             TypeElement inner = null;
             String className = te.getQualifiedName().toString();
-            Log.w(TAG, "processSource isJavaFile: %b, className: %s, %s", isJavaFile(eClass), className, te.toString());
+            // Log.w(TAG, "processSource isJavaFile: %b, className: %s, %s", isJavaFile(eClass), className, te.toString());
             if (te.getNestingKind() == NestingKind.MEMBER) { // 内部类
                 String simpleName = te.getSimpleName().toString();
                 className = className.substring(0, className.length() - simpleName.length() - 1);

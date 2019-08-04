@@ -2,6 +2,7 @@ package com.drumge.kvo.compiler.java;
 
 import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.compiler.KvoSourceInfo;
+import com.drumge.kvo.compiler.ProcessVariableElement;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -45,6 +46,7 @@ public class JavaSourceProcessor {
             kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
                     .addModifiers(Modifier.PUBLIC)
                     .addJavadoc(JAVA_DOC)
+                    .addOriginatingElement(new ProcessVariableElement(info.clsElement))
                     .addFields(fields);
             genTempClass(info.clsElement, SOURCE_CLASS_SUFFIX, null);
         }
@@ -56,9 +58,10 @@ public class JavaSourceProcessor {
                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                         .addFields(fields)
                         .addJavadoc(JAVA_DOC)
+                        .addOriginatingElement(te)
                         .build();
                 innerList.add(typeSpec);
-                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null);
+                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null, te);
             }
             if (kvoSourceBuilder == null) {
                 kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
@@ -108,12 +111,13 @@ public class JavaSourceProcessor {
     private void genTempClass(Element eClass, String suffix, Iterable<MethodSpec> methods) {
         String pack = getPackage(eClass.toString());
         String simpleName = eClass.getSimpleName().toString() + suffix;
-        genTempClass(pack, simpleName, methods);
+        genTempClass(pack, simpleName, methods, eClass);
     }
 
-    private void genTempClass(String pack, String simpleName, Iterable<MethodSpec> methods) {
+    private void genTempClass(String pack, String simpleName, Iterable<MethodSpec> methods, Element eClass) {
         TypeSpec.Builder builder= TypeSpec.classBuilder(simpleName)
-                .addJavadoc(JAVA_DOC + "\n just intermediate class, not been packaged in apk");
+                .addJavadoc(JAVA_DOC + "\n just intermediate class, not been packaged in apk")
+                .addOriginatingElement(eClass);
         if (methods != null) {
             builder.addMethods(methods);
         }

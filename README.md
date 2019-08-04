@@ -321,7 +321,7 @@ public class ExampleTarget {
 * 继承关系，支持子类接收父类的@KvoWatch通知
 * 拦截器
 * 泛型，见 AItemViewHolder
-
+* kotlin中不能直接使用注解器生成的代码，因为 kaptGenerateStubsKotlin 要比 kaptKotlin 早，stub 引用的注解器代码还没生成会导致报错
 
 
 

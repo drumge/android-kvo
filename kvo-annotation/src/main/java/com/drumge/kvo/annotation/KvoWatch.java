@@ -23,6 +23,6 @@ public @interface KvoWatch {
     }
 
     String tag() default ""; // 标识同对象不同实例
-    String name(); // 观察属性的标识
+    String name() default ""; // 观察属性的标识
     Thread thread() default Thread.DEFAULT;
 }

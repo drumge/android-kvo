@@ -386,9 +386,10 @@ class KvoHandler {
             String fieldName = field.name
             return !field.hasAnnotation(KvoIgnore.class) && !containBindMethod(bindMethods, fieldName)
         }.each { CtField field ->
-            if ((field.modifiers & AccessFlag.FINAL) == 0) {
+            if ((field.modifiers & AccessFlag.TRANSIENT) == 0 &&  (field.modifiers & AccessFlag.FINAL) == 0) {
                 if (check && AccessFlag.isPublic(field.modifiers)) {
-                    String msg = "${className}#${field.name} is illegal, it may need to be private, or you may add @KvoIgnore to the field, or add @KvoSource(check = false) to the class"
+                    String msg = "${source.name}#${field.name} is illegal, it may need to be private, or you may add " +
+                            "@KvoIgnore to the field, or add @KvoSource(check = false) to the class"
                     throw new RuntimeException(msg)
                 }
                 CtMethod method = checkDefaultMethod(source, field, check)

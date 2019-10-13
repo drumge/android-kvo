@@ -49,8 +49,8 @@ class KvoTransform extends BaseEasyTransform {
 
     @Override
     boolean onUnzipJarFile(JarInput jarInput, String unzipPath, File outputFile) {
-        String name = jarInput.name
-        Log.d(TAG, mProject.name + " onUnzipJarFile name: %s,  unzipPath: %s", name, unzipPath)
+//        String name = jarInput.name
+//        Log.d(TAG, mProject.name + " onUnzipJarFile name: %s,  unzipPath: %s", name, unzipPath)
         return false
     }
 

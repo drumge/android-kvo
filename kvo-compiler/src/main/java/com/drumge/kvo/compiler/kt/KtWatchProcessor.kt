@@ -288,9 +288,9 @@ class KtWatchProcessor(private val processingEnv: ProcessingEnvironment) {
     private fun getTypes(type: VariableElement): List<ClassName> {
 
         val typeList = getTypeArguments(type.asType())
-        if (typeList != null && !typeList!!.isEmpty()) {
-            val types = ArrayList<ClassName>(typeList!!.size)
-            for (t in typeList!!) {
+        if (typeList != null && typeList.isNotEmpty()) {
+            val types = ArrayList<ClassName>(typeList.size)
+            for (t in typeList) {
                 types.add(javaToKotlinType(typeNameWithoutTypeArguments(t.toString())))
             }
             return types

@@ -36,7 +36,8 @@ import static com.drumge.kvo.compiler.ConstantKt.TAG;
 /**
  * Created by chenrenzhan on 2018/4/29.
  *
- * java poet 参考资料： https://xsfelvis.github.io/2018/06/06/%E8%B0%88%E8%B0%88APT%E5%92%8CJavaPoet%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7/
+ * java poet 参考资料：
+ * https://xsfelvis.github.io/2018/06/06/%E8%B0%88%E8%B0%88APT%E5%92%8CJavaPoet%E7%9A%84%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7/
  * https://blog.csdn.net/l540675759/article/details/82931785
  */
 
@@ -116,13 +117,15 @@ public class KvoProcessor extends AbstractProcessor {
         }
         for (KvoTargetInfo info : targets) {
 //            Log.i(TAG, "processWatch info.simpleName: %s, info.target: %s", info.simpleName, info.target);
-            if (isJavaFile(info.target)) { // java
-                mJavaWatchProcessor.genTargetClass(info);
-                mJavaWatchProcessor.genCreatorClass(info);
-            } else { // kotlin
-                mKtWatchProcessor.genTargetClass(info);
-                mKtWatchProcessor.genCreatorClass(info);
-            }
+            mJavaWatchProcessor.genTargetClass(info);
+            mJavaWatchProcessor.genCreatorClass(info);
+            // if (isJavaFile(info.target)) { // java
+            //     mJavaWatchProcessor.genTargetClass(info);
+            //     mJavaWatchProcessor.genCreatorClass(info);
+            // } else { // kotlin
+            //     mKtWatchProcessor.genTargetClass(info);
+            //     mKtWatchProcessor.genCreatorClass(info);
+            // }
         }
     }
 
@@ -137,6 +140,7 @@ public class KvoProcessor extends AbstractProcessor {
 
     /**
      * 检查 @KvoSource 注解修饰的被观察对象，生成对应属性的name
+     *
      * @param env
      */
     private void processSource(RoundEnvironment env) {
@@ -163,6 +167,7 @@ public class KvoProcessor extends AbstractProcessor {
                 sourceInfo.className = className;
                 allClass.put(className, sourceInfo);
             }
+            // sourceInfo.clsElement = te;
             if (inner == null) {
                 sourceInfo.clsElement = te;
             } else {
@@ -176,12 +181,13 @@ public class KvoProcessor extends AbstractProcessor {
         for (KvoSourceInfo info : allClass.values()) {
             // Log.w(TAG, "processSource isJavaFile: %b, className: %s, %s", isJavaFile(info.clsElement), info.className, info
             //         .clsElement.toString());
-            if (isJavaFile(info.clsElement)) { // java
-                mJavaSourceProcessor.genKSource(info);
-            } else { // kotlin
-                Log.w(TAG, "processSource kotlin");
-                mKtSourceProcessor.genKSource(info);
-            }
+            mJavaSourceProcessor.genKSource(info);
+            // if (isJavaFile(info.clsElement)) { // java
+            //     mJavaSourceProcessor.genKSource(info);
+            // } else { // kotlin
+            //     Log.w(TAG, "processSource kotlin");
+            //     mKtSourceProcessor.genKSource(info);
+            // }
         }
     }
 

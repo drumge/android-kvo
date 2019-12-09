@@ -52,7 +52,7 @@ class KvoHandler {
     }
 
     public void handleKvoSource(String source) {
-        Log.i(TAG, "handle sourcePath: %s", source)
+//        Log.i(TAG, "handle sourcePath: %s", source)
         if (!source.endsWith(File.separator)) {
             source = source + File.separator
         }
@@ -80,7 +80,7 @@ class KvoHandler {
      * @param path
      */
     public final void appendClassPath(String path) {
-        Log.i(TAG, "appendClassPath path: %s", path)
+//        Log.i(TAG, "appendClassPath path: %s", path)
         if (path == null || path.length() == 0 || classPaths.contains(path)) {
             return
         }
@@ -116,7 +116,7 @@ class KvoHandler {
      * @param outPath
      */
     private void findInsertClass(String outPath) {
-        Log.i(TAG, "findInsertClass path: %s", outPath)
+//        Log.i(TAG, "findInsertClass path: %s", outPath)
         mProject.fileTree(outPath).findAll { File file ->
             String path = file.absolutePath
 //            Log.i(TAG, "findInsertClass  path file: %s", path)
@@ -147,7 +147,11 @@ class KvoHandler {
      */
     private boolean handleSource(String outPath) {
         boolean inject = false
-        Log.i(TAG, "handleSource path: %s, sourceClass: %s", outPath, sourceClass)
+//        Log.i(TAG, "handleSource path: %s, sourceClass: %s", outPath, sourceClass)
+        if (outPath == null || outPath.isEmpty()) {
+            Log.w(TAG, "handleSource path is empty, %s", outPath)
+            return inject
+        }
         mProject.fileTree(outPath).findAll { File file ->
             String path = file.absolutePath
             String classPath = path.replace(outPath, '')
@@ -156,7 +160,7 @@ class KvoHandler {
         }.each { File file ->
             inject = true
             String path = file.absolutePath
-            Log.i(TAG, "handleSource path file: %s", path)
+//            Log.i(TAG, "handleSource path file: %s", path)
             String kvoSourceName = path.replace(outPath, '').replaceAll(EasyUtils.regSeparator(), '.')
                     .replace('.class', '')
             processSource(kvoSourceName, outPath)
@@ -170,9 +174,13 @@ class KvoHandler {
      * @return true -- 有注入代码，需要压缩回jar
      */
     private boolean handleWatch(String outPath) {
-        Log.i(TAG, "handleWatch path: %s, watchClassMap: %s", outPath, watchClassMap)
+//        Log.i(TAG, "handleWatch path: %s, watchClassMap: %s", outPath, watchClassMap)
 
         boolean inject = false
+        if (outPath == null || outPath.isEmpty()) {
+            Log.w(TAG, "handleWatch path is empty, %s", outPath)
+            return inject
+        }
         mProject.fileTree(outPath).each { File file ->
             inject = true
             String path = file.absolutePath
@@ -204,7 +212,7 @@ class KvoHandler {
      * @param output
      */
     private void processSource(String className, String output) {
-        Log.i(TAG, "plugin processSource className: %s, output: %s", className, output)
+//        Log.i(TAG, "plugin processSource className: %s, output: %s", className, output)
         CtClass source = pool.getCtClass(className)
         if (source.isFrozen()) {
             source.defrost()
@@ -259,7 +267,7 @@ class KvoHandler {
      * @param outPath
      */
     private void processWatch(String proxyName, String className, String outPath) {
-        Log.i(TAG, "processWatch proxyName: %s, className: %s, outPath: %s", proxyName, className, outPath)
+//        Log.i(TAG, "processWatch proxyName: %s, className: %s, outPath: %s", proxyName, className, outPath)
         CtClass proxy = pool.getCtClass(proxyName)
         if (proxy.isFrozen()) {
             proxy.defrost()
@@ -386,7 +394,7 @@ class KvoHandler {
             String fieldName = field.name
             return !field.hasAnnotation(KvoIgnore.class) && !containBindMethod(bindMethods, fieldName)
         }.each { CtField field ->
-            if ((field.modifiers & AccessFlag.TRANSIENT) == 0 &&  (field.modifiers & AccessFlag.FINAL) == 0) {
+            if ((field.modifiers & AccessFlag.FINAL) == 0) {
                 if (check && AccessFlag.isPublic(field.modifiers)) {
                     String msg = "${source.name}#${field.name} is illegal, it may need to be private, or you may add " +
                             "@KvoIgnore to the field, or add @KvoSource(check = false) to the class"

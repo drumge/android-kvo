@@ -1,14 +1,19 @@
 package com.drumge.kvo.compiler.java;
 
+import android.support.annotation.NonNull;
+
 import com.drumge.kvo.annotation.KvoSource;
 import com.drumge.kvo.compiler.KvoSourceInfo;
-import com.drumge.kvo.compiler.ProcessVariableElement;
+import com.drumge.kvo.compiler.Log;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,10 +22,11 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 
 import static com.drumge.kvo.compiler.ConstantKt.JAVA_DOC;
-import static com.drumge.kvo.compiler.ConstantKt.SOURCE_CLASS_SUFFIX;
 import static com.drumge.kvo.compiler.ConstantKt.SOURCE_FILED_CLASS_PREFIX;
+import static com.drumge.kvo.compiler.ConstantKt.TAG;
 import static com.drumge.kvo.compiler.KvoCompilerUtilsKt.checkFieldLegal;
 import static com.drumge.kvo.compiler.KvoCompilerUtilsKt.format;
 import static com.drumge.kvo.compiler.KvoCompilerUtilsKt.getPackage;
@@ -46,9 +52,9 @@ public class JavaSourceProcessor {
             kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
                     .addModifiers(Modifier.PUBLIC)
                     .addJavadoc(JAVA_DOC)
-                    .addOriginatingElement(new ProcessVariableElement(info.clsElement))
+                    .addOriginatingElement(info.clsElement)
                     .addFields(fields);
-            genTempClass(info.clsElement, SOURCE_CLASS_SUFFIX, null);
+            // genTempClass(info.clsElement, SOURCE_CLASS_SUFFIX, null);
         }
         if (info.innerCls != null && !info.innerCls.isEmpty()) {
             List<TypeSpec> innerList = new ArrayList<>(info.innerCls.size());
@@ -61,10 +67,11 @@ public class JavaSourceProcessor {
                         .addOriginatingElement(te)
                         .build();
                 innerList.add(typeSpec);
-                genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null, te);
+                // genTempClass(pack, originalSimpleName + "$" + te.getSimpleName() + SOURCE_CLASS_SUFFIX, null, te);
             }
             if (kvoSourceBuilder == null) {
                 kvoSourceBuilder = TypeSpec.interfaceBuilder(simpleName)
+                        .addOriginatingElement(info.clsElement)
                         .addModifiers(Modifier.PUBLIC)
                         .addJavadoc(JAVA_DOC);
             }
@@ -121,11 +128,62 @@ public class JavaSourceProcessor {
         if (methods != null) {
             builder.addMethods(methods);
         }
+        String hash = tmpClassHash(eClass);
+        FieldSpec fieldSpec = FieldSpec.builder(String.class, "sourceHash", Modifier.FINAL)
+                .initializer("$S", hash).build();
+        builder.addField(fieldSpec);
         try {
             JavaFile clsJavaFile = JavaFile.builder(pack, builder.build()).build();
             clsJavaFile.writeTo(processingEnv.getFiler());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String tmpClassHash(Element eClass) {
+        Log.w(TAG, "processSource eClass: %s", eClass);
+        try {
+            Field sourcefile = eClass.getClass().getDeclaredField("sourcefile");
+            JavaFileObject file = (JavaFileObject) sourcefile.get(eClass);
+            InputStream inputStream = file.openInputStream();
+            String md5 = inputStringMd5(inputStream);
+            Log.w(TAG, "processSource md5: %s", md5);
+            return eClass.getSimpleName().toString() + md5;
+        } catch (Exception e) {
+            Log.w(TAG, e.toString());
+        }
+        return eClass.getSimpleName().toString();
+    }
+
+    @NonNull
+    private String inputStringMd5(InputStream inputStream) {
+        try {
+            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            byte[] buffer = new byte[8192];
+            int length;
+            while ((length = inputStream.read(buffer)) != -1) {
+                MD5.update(buffer, 0, length);
+            }
+            return byteToHex(MD5.digest());
+        } catch (Exception e) {
+            Log.w(TAG, "processSource inputStringMd5: %s", e.getMessage());
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                Log.w(TAG, "processSource inputStringMd5 close: %s", e.getMessage());
+            }
+        }
+        return "";
+    }
+
+    public static String byteToHex(byte[] bytes){
+        String strHex = "";
+        StringBuilder sb = new StringBuilder("");
+        for (int n = 0; n < bytes.length; n++) {
+            strHex = Integer.toHexString(bytes[n] & 0xFF);
+            sb.append((strHex.length() == 1) ? "0" + strHex : strHex); // 每个字节由两个字符表示，位数不够，高位补0
+        }
+        return sb.toString().trim();
     }
 }

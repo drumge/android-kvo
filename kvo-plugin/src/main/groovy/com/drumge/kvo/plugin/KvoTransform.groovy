@@ -5,6 +5,7 @@ import com.android.build.api.transform.DirectoryInput
 import com.android.build.api.transform.JarInput
 import com.android.build.api.transform.TransformOutputProvider
 import com.drumge.easy.plugin.api.BaseEasyTransform
+import com.drumge.easy.plugin.api.IEasyTransformSupport
 import com.drumge.kvo.plugin.api.KvoHandler
 import com.drumge.kvo.plugin.api.Log
 import org.gradle.api.Project
@@ -13,6 +14,7 @@ class KvoTransform extends BaseEasyTransform {
     private static final String TAG = "KvoTransform"
 
     private Project mProject
+    private IEasyTransformSupport mSupport
     private KvoHandler mHandler
     private boolean hasJavaCompiler = false
     private Collection<String> mClassPath = new ArrayList<>()
@@ -29,6 +31,12 @@ class KvoTransform extends BaseEasyTransform {
 //        Log.i(TAG, mProject.name + " addClassPath classPath: %s", classPath)
         hasJavaCompiler = true
         mClassPath.addAll(classPath)
+    }
+
+    @Override
+    void onTransformSupport(IEasyTransformSupport support) {
+        super.onTransformSupport(support)
+        mSupport = support
     }
 
     @Override
@@ -60,21 +68,28 @@ class KvoTransform extends BaseEasyTransform {
         Log.d(TAG, mProject.name + " onAfterJar ")
     }
 
+    @Override
+    void onEachDirectoryOutput(DirectoryInput directoryInput, File outputDirFile) {
+        super.onEachDirectoryOutput(directoryInput, outputDirFile)
+        mHandler.appendClassPath(outputDirFile.absolutePath)
+    }
 
     @Override
-    void onEachDirectoryOutput(DirectoryInput directoryInput, File outputs) {
-        super.onEachDirectoryOutput(directoryInput, outputs)
-//        Log.i(TAG, mProject.name + " onEachDirectoryOutput directoryInput: %s, outputs: %s", directoryInput, outputs.absolutePath)
+    void onChangeFile(DirectoryInput directoryInput, File outputDirFile, File file) {
+        super.onChangeFile(directoryInput, outputDirFile, file)
         if (hasJavaCompiler) {
-            String outPath = outputs.absolutePath + File.separator
-            mHandler.handleKvoSource(outPath)
+            mHandler.handleFile(outputDirFile, file)
         }
     }
 
     @Override
     void onAfterDirectory() {
         super.onAfterDirectory()
-        mHandler.onAfterDirectory()
+        Log.i(TAG, mProject.name + " onAfterDirectory ")
+        mSupport.execute {
+            mHandler.onAfterDirectory()
+        }
+        mSupport.waitForTasks()
     }
 
     @Override

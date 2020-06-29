@@ -66,6 +66,7 @@ public class JavaWatchProcessor {
         ParameterizedTypeName weakTargetType = ParameterizedTypeName.get(ClassName.get(WeakReference.class), targetType);
         String targetClassName = info.simpleName + PROXY_CLASS_SUFFIX;
         TypeSpec.Builder builder= TypeSpec.classBuilder(targetClassName)
+                .addOriginatingElement(info.target)
                 .addJavadoc(JAVA_DOC)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetProxy.class), targetType));
 
@@ -146,7 +147,7 @@ public class JavaWatchProcessor {
 
         TypeSpec.Builder builder= TypeSpec.classBuilder(creatorClassName)
                 .addJavadoc(JAVA_DOC)
-                .addOriginatingElement(new ProcessVariableElement(info.target))
+                .addOriginatingElement(info.target)
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(IKvoTargetCreator.class), proxyType, targetType));
 
         if (info.target instanceof TypeElement) {

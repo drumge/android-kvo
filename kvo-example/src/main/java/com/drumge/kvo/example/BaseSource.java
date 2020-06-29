@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public abstract class BaseSource {
     private CopyOnWriteArrayList<String> list;
     private String baseClass;
+    private String moreField;
 
     public void setBaseClass(String baseClass) {
         this.baseClass = baseClass;

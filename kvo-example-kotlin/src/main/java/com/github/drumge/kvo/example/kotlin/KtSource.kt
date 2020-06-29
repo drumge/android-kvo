@@ -24,6 +24,9 @@ class KtSource {
     var mDouble: Double = 0.toDouble()
     var mBoolean: Boolean = false
     var sChar: Char = ' '
+    @KvoIgnore
+    var sCdsdfdshar: Char = ' '
+
 
     @KvoBind(name = "sChar")
 //    @KvoBind(name = K_KtSource.sChar)

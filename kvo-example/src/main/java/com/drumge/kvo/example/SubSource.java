@@ -6,5 +6,6 @@ package com.drumge.kvo.example;
 
 public class SubSource extends BaseSource {
 
+    private String subClass;
 
 }

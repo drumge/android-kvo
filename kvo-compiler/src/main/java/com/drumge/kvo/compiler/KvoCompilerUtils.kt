@@ -1,11 +1,13 @@
 package com.drumge.kvo.compiler
 
 import com.drumge.kvo.annotation.KvoIgnore
+import com.drumge.kvo.compiler.Log.w
 import com.squareup.javapoet.TypeName
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
+import java.io.File
 import java.io.IOException
 import java.util.Locale
 import javax.annotation.processing.Filer
@@ -110,6 +112,29 @@ fun javaToKotlinType(type: String): ClassName {
         ClassName.bestGuess(type)
     } else {
         ClassName.bestGuess(className)
+    }
+}
+
+/**
+ * 写入数据
+ */
+fun writeText(filePath: String, content: String) {
+    createFile(filePath)
+    File(filePath).writeText(content)
+}
+
+/**
+ * 创建文件
+ * filePath 文件路径
+ */
+fun createFile(filePath: String) {
+    val file = File(filePath)
+    if (!file.exists()) {
+        val parent = file.parentFile
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs()
+        }
+        file.createNewFile()
     }
 }
 

@@ -16,9 +16,12 @@ class KvoPlugin implements IPlugin {
     KvoPlugin(Project project) {
         mProject = project
         println('================  KvoPlugin  ================')
-        boolean isApp = project.plugins.withType(AppPlugin)
-        boolean isAndroidLib = project.plugins.withType(LibraryPlugin)
-        boolean isJavaLib = project.plugins.withType(JavaPlugin)
+//        boolean isApp = project.plugins.withType(AppPlugin)
+//        boolean isAndroidLib = project.plugins.withType(LibraryPlugin)
+//        boolean isJavaLib = project.plugins.withType(JavaPlugin)
+        boolean isApp = project.plugins.hasPlugin('com.android.application')
+        boolean isAndroidLib = project.plugins.hasPlugin('com.android.library')
+        boolean isJavaLib = project.plugins.hasPlugin('java')
 
         if (isApp || isAndroidLib) {
             createTransform(project)

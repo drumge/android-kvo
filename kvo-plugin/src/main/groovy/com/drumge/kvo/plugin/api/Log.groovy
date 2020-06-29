@@ -19,6 +19,6 @@ class Log {
     }
 
     private static String format(String msg, Object... format) {
-        return String.format(Locale.getDefault(), msg, format)
+        return String.format(Locale.getDefault(), "${System.currentTimeMillis()} $msg", format)
     }
 }

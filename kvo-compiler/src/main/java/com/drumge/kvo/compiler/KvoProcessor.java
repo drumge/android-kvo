@@ -8,6 +8,7 @@ import com.drumge.kvo.compiler.kt.KtSourceProcessor;
 import com.drumge.kvo.compiler.kt.KtWatchProcessor;
 import com.google.auto.service.AutoService;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,8 +116,10 @@ public class KvoProcessor extends AbstractProcessor {
             info.setTarget(ce);
             info.addMethod(em);
         }
+        StringBuilder targetCls = new StringBuilder();
         for (KvoTargetInfo info : targets) {
-//            Log.i(TAG, "processWatch info.simpleName: %s, info.target: %s", info.simpleName, info.target);
+           // Log.w(TAG, "processWatch info.simpleName: %s, info.target: %s",
+           //         info.simpleName, info.target);
             mJavaWatchProcessor.genTargetClass(info);
             mJavaWatchProcessor.genCreatorClass(info);
             // if (isJavaFile(info.target)) { // java
@@ -126,6 +129,10 @@ public class KvoProcessor extends AbstractProcessor {
             //     mKtWatchProcessor.genTargetClass(info);
             //     mKtWatchProcessor.genCreatorClass(info);
             // }
+            targetCls.append(info.packageName).append(".").append(info.simpleName).append(",");
+        }
+        if (!targets.isEmpty()) {
+            KvoCompilerUtilsKt.writeText(getTmpPath() + "target_class.txt", targetCls.toString());
         }
     }
 
@@ -178,6 +185,7 @@ public class KvoProcessor extends AbstractProcessor {
             }
         }
 
+        StringBuilder sourceCls = new StringBuilder();
         for (KvoSourceInfo info : allClass.values()) {
             // Log.w(TAG, "processSource isJavaFile: %b, className: %s, %s", isJavaFile(info.clsElement), info.className, info
             //         .clsElement.toString());
@@ -188,7 +196,27 @@ public class KvoProcessor extends AbstractProcessor {
             //     Log.w(TAG, "processSource kotlin");
             //     mKtSourceProcessor.genKSource(info);
             // }
+            sourceCls.append(info.className).append(",");
+            if (info.innerCls != null && !info.innerCls.isEmpty()) {
+                for (TypeElement type : info.innerCls) {
+                    String name = type.getQualifiedName().toString();
+                    int last = name.lastIndexOf(".");
+                    String innerName = name.substring(0, last) + "$" + name.substring(last + 1);
+                    sourceCls.append(innerName).append(",");
+                }
+            }
         }
+        if (!allClass.isEmpty()) {
+            KvoCompilerUtilsKt.writeText(getTmpPath() + "source_class.txt", sourceCls.toString());
+        }
+    }
+
+    private String getTmpPath() {
+        // getOptions {kapt.kotlin.generated=/Users/chenrenzhan/me/kvo/kvo-example/build/generated/source/kaptKotlin/debug}
+        String dir = processingEnv.getOptions().get("kapt.kotlin.generated");
+        int index = dir.indexOf("generated" + File.separator + "source");
+        String build = dir.substring(0, index);
+        return build + "tmp" + File.separator + "kvo" + File.separator;
     }
 
     /**

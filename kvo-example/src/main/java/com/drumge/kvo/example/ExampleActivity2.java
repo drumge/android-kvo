@@ -13,7 +13,7 @@ import com.drumge.kvo.annotation.KvoWatch;
 import com.drumge.kvo.api.Kvo;
 import com.drumge.kvo.api.KvoEvent;
 
-public class ExampleActivity extends Activity implements View.OnClickListener {
+public class ExampleActivity2 extends Activity implements View.OnClickListener {
     private static final String TAG = "ExampleActivity";
 
     private Button mBind;
@@ -99,7 +99,6 @@ public class ExampleActivity extends Activity implements View.OnClickListener {
             String text = mExampleTag1Et.getText().toString();
             mTag1.setExample(text);
         } else if (v == mExampleTag2Btn) {
-
             String text = mExampleTag2Et.getText().toString();
             mTag2.setExample(text);
         } else if (v == mIndexBtn) {

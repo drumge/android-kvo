@@ -18,6 +18,10 @@ class KvoKotlinActivity : Activity() {
     private val TAG = "KvoKotlinActivity"
 
     private lateinit var ktSource: KtSource
+    private val name: String = "name"
+    private val name1: String = "name1"
+    private val name2: String = "name2"
+    private val name3: String = "name3"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

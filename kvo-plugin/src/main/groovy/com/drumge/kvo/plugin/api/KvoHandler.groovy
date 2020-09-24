@@ -106,7 +106,9 @@ class KvoHandler implements Serializable {
 //        Log.i(TAG, "appendClassPath path: %s", path)
         classPaths.add(path)
         ClassPath cp = pool.appendClassPath(path)
-        classPathList.add(cp)
+        if (cp != null) {
+            classPathList.add(cp)
+        }
     }
 
     public final void appendDirClass(Collection<String> inputs) {
@@ -124,12 +126,13 @@ class KvoHandler implements Serializable {
      */
     private final void removeAllPoolClass() {
         classPathList.each { ClassPath cp ->
-            pool.removeClassPath(cp)
+            if (cp != null) {
+                pool.removeClassPath(cp)
+            }
         }
         pool.clearImportedPackages()
         classPathList.clear()
         classPaths.clear()
-//        sourceClass.clear()
         sourceMap.clear()
     }
 

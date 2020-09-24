@@ -100,8 +100,13 @@ class KvoTransform extends BaseEasyTransform {
     @Override
     void onFinally() {
         super.onFinally()
-        mHandler.finish()
-        mClassPath.clear()
         Log.i(TAG, project.name + " onFinally ")
+        try {
+            mHandler.finish()
+            mClassPath.clear()
+        } catch(Exception e) {
+            e.printStackTrace()
+            throw e
+        }
     }
 }

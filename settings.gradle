@@ -1,3 +1,4 @@
+include ':base'
 include ':app', ':kvo-example-kotlin'
 
 

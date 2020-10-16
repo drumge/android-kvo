@@ -38,9 +38,11 @@ class KvoHandler implements Serializable {
     private final Map<String, String> sourceMap = new HashMap<>()
     private String sourceClass = null
     private String watchClassList = null
+    private String variantName
 
-    public KvoHandler(Project project) {
+    public KvoHandler(Project project, String variant) {
         mProject = project
+        variantName = variant
         pool = new ClassPool(true)
     }
 
@@ -68,7 +70,7 @@ class KvoHandler implements Serializable {
 //            appendClassPath(outDirPath)
             String classPath = filePath.replace(outDirPath, '')
             String clsName = path2ClassName(classPath)
-//            Log.i(TAG, "handleSource each path clsName: %s", clsName)
+            Log.i(TAG, "handleSource each path clsName: %s", clsName)
             if (isSourceCls(clsName)) {
                 handleSourceFile(new File(filePath), outDirPath)
             }
@@ -82,8 +84,9 @@ class KvoHandler implements Serializable {
 //        Log.i(TAG, "isSourceCls classPath %s", classPath)
         if (sourceClass == null) {
             sourceClass = readClass("source_class.txt")
+            Log.i(TAG, "${mProject} isSourceCls sourceClass %s", sourceClass)
         }
-        Log.i(TAG, "isSourceCls classPath %s, %b", classPath, sourceClass.contains(classPath))
+//        Log.i(TAG, "isSourceCls classPath %s, %b", classPath, sourceClass.contains(classPath))
         return sourceClass.contains(classPath + ",")
     }
 
@@ -97,13 +100,16 @@ class KvoHandler implements Serializable {
      * @param path
      */
     public final void appendClassPath(String path) {
-//        Log.i(TAG, "appendClassPath path: %s", path)
+        Log.i(TAG, "%s appendClassPath path: %s", mProject, path)
         if (path == null || path.length() == 0 || classPaths.contains(path)) {
             return
         }
         // todo compile_library_classes 目录下的 module class 不包含 transform 插入代码
-        path = path.replace('compile_library_classes', 'runtime_library_classes')
-//        Log.i(TAG, "appendClassPath path: %s", path)
+        String runtimePath = path.replace('compile_library_classes_jar', 'runtime_library_classes_jar')
+        if (new File(runtimePath).exists()) {
+            path = runtimePath
+        }
+        Log.i(TAG, "appendClassPath path: %s", path)
         classPaths.add(path)
         ClassPath cp = pool.appendClassPath(path)
         if (cp != null) {
@@ -145,7 +151,7 @@ class KvoHandler implements Serializable {
 
     private void handleWatchFile(File file, String outPath) {
         String path = file.absolutePath
-//        Log.i(TAG, "handleWatch path file: %s", path)
+        Log.i(TAG, "handleWatch path file: %s", path)
         String classPath = path.replace(outPath, '')
         String clsName = path2ClassName(classPath)
         if (clsName.endsWith(WATCH_CLASS_SUFFIX)) {
@@ -171,7 +177,7 @@ class KvoHandler implements Serializable {
      * @param output
      */
     private void processSource(String className, String output) {
-//        Log.i(TAG, "plugin processSource className: %s, output: %s", className, output)
+        Log.i(TAG, "plugin processSource className: %s, output: %s", className, output)
         CtClass source = pool.getCtClass(className)
         if (source.isFrozen()) {
             source.defrost()
@@ -230,7 +236,8 @@ class KvoHandler implements Serializable {
      * @param outPath
      */
     private void processWatch(String proxyName, String className, String outPath) {
-//        Log.i(TAG, "processWatch proxyName: %s, className: %s, outPath: %s", proxyName, className, outPath)
+        Log.i(TAG, "%s processWatch proxyName: %s, className: %s, outPath: %s", mProject,
+                proxyName, className, outPath)
         CtClass proxy = pool.getCtClass(proxyName)
         if (proxy.isFrozen()) {
             proxy.defrost()
@@ -435,7 +442,7 @@ class KvoHandler implements Serializable {
 
     private String readClass(String name) {
         String path = mProject.buildDir.absolutePath +
-                "${File.separator}tmp${File.separator}kvo${File.separator}${name}"
+                "${File.separator}generated${File.separator}source${File.separator}kapt${File.separator}${variantName}${File.separator}${name}"
         try {
             return FileUtils.readFileToString(new File(path))
         } catch (Exception e) {

@@ -37,11 +37,15 @@ dependencies {
 //    implementation "com.github.drumge:kvo-compiler:${kvo_compiler_version}"
 //    kapt project(':kvo-compiler')
 
+    project(':base')
+    project(':kvo-lib-example-java')
+
 }
 
 ///*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.drumge.kvo.plugin.KvoPlugin
+import com.drumge.kvo.plugin.extend.KvoExtend
 
 apply plugin: 'com.drumge.easy.plugin'
 
@@ -54,6 +58,9 @@ easy_plugin {
     plugins{
         kvo {
             plugin = new KvoPlugin(project)
+            extend = KvoExtend.createExtend(project) {
+                it.logLevel = 4
+            }
         }
     }
 }
@@ -63,7 +70,31 @@ task ket {
     doLast {
         println()
         println('========  doLast  =========')
+        println(it.properties)
         println()
     }
 }
+
+allprojects.each { p ->
+    p.afterEvaluate {
+        p.tasks.each {
+
+
+            it.doLast {
+                println('---------------------')
+                println(' -- do last ' + it)
+                println(' -- do last inputs ' + it.inputs.files.files)
+                println(' -- do last outputs ' + it.outputs.files.files)
+
+                println('---------------------')
+                println()
+            }
+        }
+    }
+    p.gradle.taskGraph.afterTask {
+        println('---------------------')
+        println(' -- afterTask  ' + it)
+    }
+}
+
 

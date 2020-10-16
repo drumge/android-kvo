@@ -213,10 +213,14 @@ public class KvoProcessor extends AbstractProcessor {
 
     private String getTmpPath() {
         // getOptions {kapt.kotlin.generated=/Users/chenrenzhan/me/kvo/kvo-example/build/generated/source/kaptKotlin/debug}
+        // Log.w(TAG, "getTmpPath processingEnv.getOptions(): %s", processingEnv.getOptions());
         String dir = processingEnv.getOptions().get("kapt.kotlin.generated");
-        int index = dir.indexOf("generated" + File.separator + "source");
-        String build = dir.substring(0, index);
-        return build + "tmp" + File.separator + "kvo" + File.separator;
+
+        dir = dir.replace("/kaptKotlin/", "/kapt/");
+        return dir + File.separator;
+        // int index = dir.indexOf("generated" + File.separator + "source");
+        // String build = dir.substring(0, index);
+        // return build + "tmp" + File.separator + "kvo" + File.separator;
     }
 
     /**

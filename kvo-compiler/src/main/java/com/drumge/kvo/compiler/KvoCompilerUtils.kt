@@ -34,17 +34,17 @@ object Log {
 
     @JvmStatic
     fun i(tag: String, msg: String, vararg format: Any) {
-        messager!!.printMessage(Diagnostic.Kind.NOTE, format("[%s]\t", tag) + format(msg, *format))
+        messager!!.printMessage(Diagnostic.Kind.NOTE, format("[%s]\t", tag) + format(msg, *format) + "\r\n")
     }
 
     @JvmStatic
     fun w(tag: String, msg: String, vararg format: Any) {
-        messager!!.printMessage(Diagnostic.Kind.WARNING, format("[%s]\t", tag) + format(msg, *format))
+        messager!!.printMessage(Diagnostic.Kind.WARNING, format("[%s]\t", tag) + format(msg, *format) + "\r\n")
     }
 
     @JvmStatic
     fun e(tag: String, msg: String, vararg format: Any) {
-        messager!!.printMessage(Diagnostic.Kind.ERROR, format("[%s]\t", tag) + format(msg, *format))
+        messager!!.printMessage(Diagnostic.Kind.ERROR, format("[%s]\t", tag) + format(msg, *format) + "\r\n")
     }
 }
 
